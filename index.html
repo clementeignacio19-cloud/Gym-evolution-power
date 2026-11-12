@@ -174,6 +174,15 @@ td{font-size:13px;color:#edf1f5}
 .sumbar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:#1a1b1f;margin-top:12px}
 .sumbar div{transition:width .25s}
 .sum-status{margin-top:8px;font-size:12px;font-weight:700}
+.health-title{border-top:1px solid #23262c;padding-top:12px;margin-top:4px}
+.flag{display:inline-flex;align-items:center;gap:4px;margin:4px 4px 0 0;padding:3px 8px;border-radius:999px;font-size:10.5px;font-weight:800;background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);color:#ffb3b3}
+.water{margin-top:14px;display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:18px;background:radial-gradient(circle at 0% 0%,rgba(79,195,255,.18),transparent 60%),#0d1013;border:1px solid rgba(79,195,255,.28)}
+.water .drop{width:52px;height:52px;flex:none;border-radius:16px;display:grid;place-items:center;font-size:26px;background:rgba(79,195,255,.14)}
+.water small{display:block;color:#9fd8f5;font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
+.water strong{display:block;font-size:26px;letter-spacing:-.8px;color:#e8f7ff}
+.water span{font-size:12px;color:#a9c3d1}
+.glasses{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.glasses i{width:10px;height:14px;border-radius:2px 2px 4px 4px;background:#4fc3ff;opacity:.85}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border-radius:14px;background:#0b0c0e;border:1px solid #262931}
 .seg button{border:0;border-radius:10px;padding:10px;background:transparent;color:#c9ced6;font-weight:800}
 .seg button.on{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111}
@@ -396,7 +405,11 @@ td{font-size:13px;color:#edf1f5}
               <div class="field"><label>Correo</label><input name="correo" type="email" placeholder="correo@ejemplo.com"></div>
               <div class="field"><label>Objetivo</label><select name="objetivo"><option>Bajar grasa</option><option>Ganar masa muscular</option><option>Mejorar rendimiento</option><option>Mantención</option><option>Recomposición corporal</option></select></div>
               <div class="field"><label>Frecuencia de entrenamiento</label><select name="frecuencia"><option>2 veces/semana</option><option>3 veces/semana</option><option>4 veces/semana</option><option>5 veces/semana</option><option>6 veces/semana</option></select></div>
-              <div class="field full"><label>Observaciones iniciales</label><textarea name="obs" placeholder="Alergias, lesiones, horarios, antecedentes relevantes..."></textarea></div>
+              <div class="field full health-title"><label style="font-size:13px;color:#f1d38e">🩺 Antecedentes de salud</label></div>
+              <div class="field full"><label>¿Padece alguna enfermedad o condición médica?</label><textarea name="condicion" placeholder="Ej. Hipertensión, diabetes, asma, hipotiroidismo… o “Ninguna”"></textarea></div>
+              <div class="field full"><label>¿Toma algún medicamento actualmente?</label><textarea name="medicamentos" placeholder="Nombre y dosis, ej. Losartán 50 mg/día… o “Ninguno”"></textarea></div>
+              <div class="field full"><label>¿Tiene limitaciones físicas o lesiones?</label><textarea name="limitaciones" placeholder="Ej. Dolor lumbar, lesión de rodilla, hombro operado… o “Ninguna”"></textarea></div>
+              <div class="field full"><label>Observaciones iniciales</label><textarea name="obs" placeholder="Alergias, horarios, antecedentes relevantes..."></textarea></div>
             </div>
             <div class="sep"></div>
             <div class="actions"><button class="btn primary" type="submit" id="student-submit">Guardar alumno</button><button class="btn secondary" type="button" onclick="resetStudentForm()">Limpiar</button><button class="btn danger hide" type="button" id="student-delete" onclick="deleteStudent($('student-form').elements.id.value)">🗑 Eliminar alumno</button></div>
@@ -513,6 +526,7 @@ td{font-size:13px;color:#edf1f5}
               <div class="mc" style="--c:var(--fat)"><small>Grasa</small><strong id="o-gg">—</strong><span>gramos por día</span><div class="per" id="o-gpm">—</div></div>
               <div class="mc" style="--c:var(--carb)"><small>Carbohidratos</small><strong id="o-cg">—</strong><span>gramos por día</span><div class="per" id="o-cpm">—</div></div>
             </div>
+            <div class="water"><div class="drop">💧</div><div style="min-width:0"><small>Agua diaria recomendada</small><strong id="o-water">—</strong><span id="o-water-sub">30–35 ml por kg de peso</span><div class="glasses" id="o-glasses"></div></div></div>
           </div>
         </div>
       </div>
@@ -695,7 +709,7 @@ function renderStudents(){
   const q=($('student-search').value||'').toLowerCase().trim();
   const list=state.students.filter(s=>!q||s.nombre.toLowerCase().includes(q)||(s.objetivo||'').toLowerCase().includes(q));
   $('student-rows').innerHTML=list.length?list.map(s=>{const le=lastEval(s.id);return `
-    <tr><td data-l="Alumno"><div><b>${esc(s.nombre)}</b><br><span style="color:#8f96a0;font-size:12px">${esc(s.correo||s.telefono||'Sin contacto')}</span></div></td>
+    <tr><td data-l="Alumno"><div><b>${esc(s.nombre)}</b><br><span style="color:#8f96a0;font-size:12px">${esc(s.correo||s.telefono||'Sin contacto')}</span>${healthFlags(s)}</div></td>
     <td data-l="Edad">${esc(s.edad||'—')}</td><td data-l="Objetivo">${esc(s.objetivo)}</td><td data-l="Último peso">${le?esc(le.peso)+' kg':'—'}</td>
     <td class="full"><div class="student-actions">
       <button class="btn sm green" data-act="eval" data-id="${esc(s.id)}">Evaluar</button>
@@ -818,6 +832,10 @@ $('plan-student').addEventListener('change',loadPlan);
 
 function updateCalc(){
   const r=calcMacros(readMacro());
+  {const wkg=num($('m-pact').value)||r.peso,w=waterRange(wkg);
+   $('o-water').textContent=w?fmt(w.min,1)+' – '+fmt(w.max,1)+' L':'—';
+   $('o-water-sub').textContent=w?`${fmt(wkg,1)} kg × 30–35 ml · ≈ ${Math.round(w.max/0.25)} vasos de 250 ml`:'Ingresa el peso';
+   $('o-glasses').innerHTML=w?'<i></i>'.repeat(Math.min(20,Math.round(w.max/0.25))):'';}
   const calcCard=$('sum-alert').closest('.calc');calcCard.classList.toggle('calc-blocked',!r.ok);
   $('sum-alert').classList.toggle('hide',r.ok);
   if(!r.ok){const diff=100-r.sum;$('sum-alert').innerHTML=`<big>⛔ Los % suman ${fmt(r.sum)}%, no 100%</big>No se calculan calorías hasta corregirlo. ${diff>0?'Faltan '+fmt(diff)+'%':'Sobran '+fmt(-diff)+'%'} — ajusta proteína, grasa o carbohidratos, o elige un tipo de plan.`;}
@@ -983,6 +1001,10 @@ function drawReport(){
   sel.innerHTML=ev.length?ev.map(e=>'<option value="'+esc(e.id)+'">'+fdate(e.fecha)+' · '+esc(e.meta)+'</option>').join(''):'<option value="">Sin evaluaciones</option>';
   if(ev.some(e=>e.id===old))sel.value=old;renderReport();
 }
+const NONE=/^(no|ninguna?o?|ningun[oa]|n\/a|-|—|sin)\.?$/i;
+const has=v=>String(v||'').trim()&&!NONE.test(String(v).trim());
+function healthFlags(s){const f=[];if(has(s.condicion))f.push('🩺 Condición médica');if(has(s.medicamentos))f.push('💊 Medicamentos');if(has(s.limitaciones))f.push('⚠ Limitación física');return f.length?'<div>'+f.map(x=>`<span class="flag">${x}</span>`).join('')+'</div>':'';}
+function waterRange(kg){return kg>0?{min:kg*.03,max:kg*.035}:null;}
 const box=(k,v)=>`<div class="report-box"><b>${esc(k)}</b>${esc(v??'—')}</div>`;
 const kpi=(k,v,s,c)=>`<div class="report-box kpi"${c?` style="border-top:4px solid ${c}"`:''}><small>${esc(k)}</small><strong>${v}</strong><small>${esc(s||'')}</small></div>`;
 function renderReport(){
@@ -993,7 +1015,8 @@ function renderReport(){
   $('report-heading').textContent=mode==='nutricion'?'Pauta de alimentación':mode==='entrenamiento'?'Plan semanal de entrenamiento':'Evaluación física y nutricional';
   $('report-date').textContent=fdate(mode==='entrenamiento'?w?.start:mode==='nutricion'?p?.date:e?.fecha);
   if(!s){$('report-body').innerHTML='<p>Selecciona un alumno para mostrar su documento.</p>';return;}
-  const basic=`<h4>Datos del alumno</h4><div class="report-grid">${box('Alumno',s.nombre)}${box('Objetivo',s.objetivo)}${box('Frecuencia de entrenamiento',s.frecuencia)}${box('Edad',s.edad?s.edad+' años':'No registrada')}</div>`;
+  const basic=`<h4>Datos del alumno</h4><div class="report-grid">${box('Alumno',s.nombre)}${box('Objetivo',s.objetivo)}${box('Frecuencia de entrenamiento',s.frecuencia)}${box('Edad',s.edad?s.edad+' años':'No registrada')}</div>`
+    +`<h4>Antecedentes de salud</h4><div class="report-grid three">${box('Enfermedad / condición médica',s.condicion||'No informada')}${box('Medicamentos actuales',s.medicamentos||'No informados')}${box('Limitaciones físicas',s.limitaciones||'No informadas')}</div>`;
   const follow=(d,r)=>`<h4>Próximo seguimiento</h4><div class="report-grid">${box('Fecha próximo control',d?fdate(d):'Por definir')}${box('Responsable',r||'Por definir')}</div>`;
 
   if(mode==='nutricion'){
@@ -1005,7 +1028,7 @@ function renderReport(){
       <div class="report-grid four">${kpi('Calorías',fmt(r.kcal),'kcal / día','#8f6b1b')}${kpi('Proteína',fmt(r.protG,0)+' g',fmt(r.pp)+'% · '+fmt(r.protK)+' kcal','#e6a91a')}${kpi('Grasa',fmt(r.fatG,0)+' g',fmt(r.pg)+'% · '+fmt(r.fatK)+' kcal','#ee6b3a')}${kpi('Carbohidratos',fmt(r.carbG,0)+' g',fmt(r.pc)+'% · '+fmt(r.carbK)+' kcal','#1e9fe0')}</div>
       <div class="rbar"><div style="width:${r.protK/tot*100}%;background:#e6a91a"></div><div style="width:${r.fatK/tot*100}%;background:#ee6b3a"></div><div style="width:${r.carbK/tot*100}%;background:#1e9fe0"></div></div>
       <p style="font-size:11.5px;color:#666;margin:4px 0 0">${r.pesoActual?'Peso actual '+fmt(r.pesoActual,1)+' kg · ':''}Peso ideal ${fmt(r.pesoIdeal,1)} kg · Cálculo: ${fmt(r.peso,1)} kg (${r.base==='actual'?'actual':'ideal'}) × ${fmt(r.fk)} kcal/kg = ${fmt(r.kcal)} kcal (${fmt(r.gpk,1)} g de proteína/kg) · ${r.n} comidas al día → por comida: <b>${fmt(r.perMeal.p,0)} g proteína · ${fmt(r.perMeal.g,0)} g grasa · ${fmt(r.perMeal.c,0)} g carbohidratos</b> (≈ ${fmt(r.perMeal.k)} kcal)</p>
-      <h4>Plan de alimentación</h4>
+      ${(()=>{const wkg=num(p.macro.pesoActual)||r.peso,w=waterRange(wkg);return w?`<div class="report-box" style="background:#eaf6fd;margin-top:10px"><b>💧 Agua diaria recomendada: ${fmt(w.min,1)} – ${fmt(w.max,1)} litros</b>${fmt(wkg,1)} kg × 30–35 ml/kg · aprox. ${Math.round(w.max/0.25)} vasos de 250 ml repartidos en el día</div>`:'';})()}<h4>Plan de alimentación</h4>
       <table><thead><tr><th style="width:24%">Comida</th><th>Alimentos</th><th style="width:26%">Suplementación</th></tr></thead><tbody>
       ${p.meals.map(m=>`<tr><td><b>${esc(m.name)}</b>${m.time?'<br><span style="color:#8f6b1b;font-weight:700">'+esc(m.time)+'</span>':''}</td><td>${esc(m.food||'—')}</td><td>${esc(m.supp||'—')}</td></tr>`).join('')}
       </tbody></table>
@@ -1046,7 +1069,7 @@ function download(name,content,type){const b=new Blob([content],{type});const u=
 const csvV=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
 function exportCSV(kind){
   let rows;
-  if(kind==='alumnos')rows=[['ID','Nombre','Edad','Sexo','Telefono','Correo','Objetivo','Frecuencia','Observaciones'],...state.students.map(s=>[s.id,s.nombre,s.edad,s.sexo,s.telefono,s.correo,s.objetivo,s.frecuencia,s.obs])];
+  if(kind==='alumnos')rows=[['ID','Nombre','Edad','Sexo','Telefono','Correo','Objetivo','Frecuencia','Condicion medica','Medicamentos','Limitaciones fisicas','Observaciones'],...state.students.map(s=>[s.id,s.nombre,s.edad,s.sexo,s.telefono,s.correo,s.objetivo,s.frecuencia,s.condicion,s.medicamentos,s.limitaciones,s.obs])];
   else rows=[['ID evaluacion','ID alumno','Alumno','Fecha','Meta','Peso','Altura','Cintura','IMC','Agua declarada','Agua ref min','Agua ref max','Creatina','Sueno','Comidas','Notas'],...state.evals.map(e=>{const s=state.students.find(x=>x.id===e.studentId);const kg=num(e.peso),h=num(e.altura);
     return [e.id,e.studentId,s?.nombre||'',e.fecha,e.meta,e.peso,e.altura,e.cintura,kg&&h?(kg/((h/100)**2)).toFixed(1):'',e.aguaReal,(kg*.03).toFixed(2),(kg*.035).toFixed(2),e.creatina,e.sueno,e.comidas,e.notas];})];
   download('evolution_power_'+kind+'_'+today()+'.csv','﻿'+rows.map(r=>r.map(csvV).join(';')).join('\r\n'),'text/csv;charset=utf-8;');toast('CSV descargado para Excel');
