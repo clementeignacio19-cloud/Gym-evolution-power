@@ -174,6 +174,16 @@ td{font-size:13px;color:#edf1f5}
 .sumbar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:#1a1b1f;margin-top:12px}
 .sumbar div{transition:width .25s}
 .sum-status{margin-top:8px;font-size:12px;font-weight:700}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border-radius:14px;background:#0b0c0e;border:1px solid #262931}
+.seg button{border:0;border-radius:10px;padding:10px;background:transparent;color:#c9ced6;font-weight:800}
+.seg button.on{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111}
+.type-active{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(213,178,95,.08);border:1px solid rgba(213,178,95,.22);font-size:13px;color:#f1d38e;font-weight:700}
+.pt-list{display:grid;gap:10px}
+.pt-row{display:grid;grid-template-columns:minmax(0,2.2fr) repeat(4,minmax(0,.8fr)) auto auto;gap:8px;align-items:end;padding:12px;border-radius:14px;background:#0e0f11;border:1px solid #24262b}
+.pt-row label{display:block;font-size:10.5px;font-weight:800;color:#9aa1ab;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+.pt-row input{width:100%;background:#0b0c0e;border:1px solid #262931;color:#fff;border-radius:10px;padding:9px 10px;min-height:40px}
+.pt-row .ok{font-size:12px;font-weight:800;white-space:nowrap;padding-bottom:10px}
+@media(max-width:720px){.pt-row{grid-template-columns:repeat(4,minmax(0,1fr))}.pt-row .pt-name{grid-column:1/-1}.pt-row .ok{grid-column:1/3}.pt-row .btn{grid-column:3/5}.pt-row input{font-size:16px}}
 .sum-alert{margin-top:12px;padding:16px 18px;border-radius:16px;background:rgba(255,59,59,.14);border:2px solid #ff4d4d;color:#ffd0d0;font-size:15px;font-weight:800;line-height:1.35}
 .sum-alert big{display:block;font-size:20px;color:#ff6b6b;margin-bottom:4px}
 .calc-blocked .kcal-hero,.calc-blocked .macro-cards{opacity:.35;filter:grayscale(1)}
@@ -464,8 +474,10 @@ td{font-size:13px;color:#edf1f5}
         <div class="calc">
           <div>
             <div class="fieldgrid two">
-              <div class="field"><label>Peso ideal</label><div class="input-unit"><input id="m-peso" type="number" inputmode="decimal" step="0.1" min="0" value="70"><em>kg</em></div><span class="hint" id="m-peso-hint"></span></div>
-              <div class="field"><label>Calorías por kg de peso</label><div class="input-unit"><input id="m-fk" type="number" inputmode="numeric" step="1" min="15" max="50" value="25" list="fk-list"><em>kcal/kg</em></div><div class="actions" id="fk-btns" style="margin-top:2px"><button class="btn sm ghost" type="button" data-fk="25">25</button><button class="btn sm ghost" type="button" data-fk="30">30</button><button class="btn sm ghost" type="button" data-fk="35">35</button></div></div>
+              <div class="field"><label>Peso actual</label><div class="input-unit"><input id="m-pact" type="number" inputmode="decimal" step="0.1" min="0" placeholder="Ej. 85"><em>kg</em></div><span class="hint" id="m-pact-hint"></span></div>
+              <div class="field"><label>Peso ideal (meta)</label><div class="input-unit"><input id="m-peso" type="number" inputmode="decimal" step="0.1" min="0" value="70"><em>kg</em></div><span class="hint" id="m-peso-hint"></span></div>
+              <div class="field full"><label>Calcular calorías sobre</label><div class="seg" id="base-seg"><button type="button" data-base="ideal">🎯 Peso ideal</button><button type="button" data-base="actual">⚖️ Peso actual</button></div></div>
+              <div class="field full"><label>Calorías por kg de peso <span class="hint" style="font-weight:600">· lo define el tipo de plan, o ajústalo a mano</span></label><div class="input-unit"><input id="m-fk" type="number" inputmode="numeric" step="1" min="15" max="50" value="25" list="fk-list"><em>kcal/kg</em></div><div class="actions" id="fk-btns" style="margin-top:2px"><button class="btn sm ghost" type="button" data-fk="20">20</button><button class="btn sm ghost" type="button" data-fk="22">22</button><button class="btn sm ghost" type="button" data-fk="25">25</button><button class="btn sm ghost" type="button" data-fk="28">28</button><button class="btn sm ghost" type="button" data-fk="30">30</button><button class="btn sm ghost" type="button" data-fk="35">35</button><button class="btn sm ghost" type="button" data-fk="40">40</button></div></div>
               <div class="field full"><label>Nº de comidas</label><div class="stepper"><button type="button" onclick="stepMeals(-1)">−</button><input id="m-n" type="number" inputmode="numeric" min="1" max="8" value="5"><button type="button" onclick="stepMeals(1)">+</button></div></div>
             </div>
             <div class="sep" style="margin:16px 0"></div>
@@ -476,7 +488,7 @@ td{font-size:13px;color:#edf1f5}
               <div class="pct" style="--c:var(--carb)"><label><i></i>Carbohidratos</label><input id="m-pc" type="number" inputmode="numeric" min="0" max="80" value="30"><input type="range" id="r-pc" min="0" max="80" value="30"></div>
             </div>
             <div class="sumbar"><div id="sb-p" style="background:var(--prot)"></div><div id="sb-g" style="background:var(--fat)"></div><div id="sb-c" style="background:var(--carb)"></div></div>
-            <div class="sum-status" id="sum-status"></div><div class="sum-alert hide" id="sum-alert"></div>
+            <div class="type-active" id="type-active"></div><div class="sum-status" id="sum-status"></div><div class="sum-alert hide" id="sum-alert"></div>
             <div class="actions" style="margin-top:10px">
               <span id="preset-btns" style="display:contents"></span>
             </div>
@@ -504,6 +516,13 @@ td{font-size:13px;color:#edf1f5}
           </div>
         </div>
       </div>
+
+      <details class="card" id="pt-config" style="margin-bottom:18px">
+        <summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h3 style="margin:0">⚙️ Configurar tipos de plan</h3><p class="desc" style="margin:4px 0 0">Edita los % y kcal/kg de cada plan, o crea los tuyos. Se guardan en este navegador.</p></div><span class="tag gold">Editar</span></summary>
+        <div class="sep" style="margin:16px 0"></div>
+        <div class="pt-list" id="pt-list"></div>
+        <div class="actions" style="margin-top:12px"><button class="btn sm primary" type="button" onclick="addPlanType()">+ Nuevo tipo de plan</button><button class="btn sm ghost" type="button" onclick="resetPlanTypes()">↺ Restablecer valores</button></div>
+      </details>
 
       <div class="card" style="margin-bottom:18px">
         <div class="rowhead"><div><h3>🍽️ Plan de alimentación</h3><p class="desc" style="margin:0">Cada comida muestra los macros objetivo. Puedes cambiar nombre, horario, alimentos y suplementos.</p></div><button class="btn secondary sm" type="button" onclick="stepMeals(1)">+ Agregar comida</button></div>
@@ -583,8 +602,8 @@ td{font-size:13px;color:#edf1f5}
 <script>
 /* ================= DATA ================= */
 const KEY='evolution_power_demo_v1';
-let state={students:[],evals:[],plans:[],workouts:[]};
-try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);state={students:Array.isArray(o.students)?o.students:[],evals:Array.isArray(o.evals)?o.evals:[],plans:Array.isArray(o.plans)?o.plans:[],workouts:Array.isArray(o.workouts)?o.workouts:[]};}}catch(e){}
+let state={students:[],evals:[],plans:[],workouts:[],config:{}};
+try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);state={students:Array.isArray(o.students)?o.students:[],evals:Array.isArray(o.evals)?o.evals:[],plans:Array.isArray(o.plans)?o.plans:[],workouts:Array.isArray(o.workouts)?o.workouts:[],config:o.config&&typeof o.config==='object'?o.config:{}};}}catch(e){}
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -610,16 +629,17 @@ const TEMPLATE_NOTES=['2,5 a 3 litros de agua al día','Solo sal de mar','Usar s
 const TEMPLATE_LIBRE='Sábado o domingo: 1 hora de comida a libre elección';
 const VEG_FREE=['Lechuga','Apio','Repollo','Acelga','Espinacas','Berros','Albahaca','Cebollín','Cebolla','Puerros','Brócoli','Coliflor','Zapallo italiano','Berenjenas','Pepino','Rúcula','Pimentones','Champiñón','Arvejas','Alcachofa','Rábanos','Espárragos','Tomate'];
 const VEG_COUNT=['Betarragas (solo crudas ralladas)','Porotos verdes (hasta 100 g)','Papas (150 g)','Zapallo amarillo (hasta 200 g)','Zanahorias crudas','Nabos','Brotes de verduras (diente de dragón, alfalfa, arvejas…)'];
-const DEFAULT_MACRO={peso:70,fk:25,pp:40,pg:30,pc:30,n:5};
+const DEFAULT_MACRO={peso:70,pesoActual:'',base:'ideal',fk:25,pp:40,pg:30,pc:30,n:5};
 
 /* fórmulas exactas de la planilla */
 function calcMacros(m){
-  const peso=num(m.peso),fk=num(m.fk)||25,pp=num(m.pp),pg=num(m.pg),pc=num(m.pc),n=Math.max(1,Math.round(num(m.n))||1);
+  const pesoIdeal=num(m.peso),pesoActual=num(m.pesoActual),base=m.base==='actual'&&pesoActual>0?'actual':'ideal';
+  const peso=base==='actual'?pesoActual:pesoIdeal,fk=num(m.fk)||25,pp=num(m.pp),pg=num(m.pg),pc=num(m.pc),n=Math.max(1,Math.round(num(m.n))||1);
   const kcal=peso*fk;                   // kcal totales = peso × kcal/kg
   const protK=kcal*pp/100, protG=protK/4, gpk=peso>0?protG/peso:0;
   const fatK=kcal*pg/100, carbK=kcal*pc/100;   // D11, D12
   const fatG=fatK/9, carbG=carbK/4;     // F11, F12
-  return {peso,fk,gpk,ok:Math.round(pp+pg+pc)===100,pp,pg,pc,n,protG,protK,kcal,fatK,carbK,fatG,carbG,
+  return {peso,pesoIdeal,pesoActual,base,fk,gpk,ok:Math.round(pp+pg+pc)===100,pp,pg,pc,n,protG,protK,kcal,fatK,carbK,fatG,carbG,
     perMeal:{p:protG/n,g:fatG/n,c:carbG/n,k:kcal/n}, sum:pp+pg+pc};
 }
 
@@ -760,7 +780,7 @@ $('eval-form').addEventListener('submit',e=>{
   toast('Evaluación guardada. Ya puedes generar el PDF.');go('informe');
 });
 function evalToPlan(){const sid=$('eval-student').value;if(!sid){toast('Selecciona un alumno');return;}
-  $('plan-student').value=sid;loadPlan();const w=num($('peso').value)||num(lastEval(sid)?.peso);if(w>0){$('m-peso').value=w;updateCalc();}go('plan');}
+  $('plan-student').value=sid;loadPlan();const w=num($('peso').value)||num(lastEval(sid)?.peso);if(w>0){$('m-pact').value=w;if(!num($('m-peso').value))$('m-peso').value=w;updateCalc();}go('plan');}
 
 /* ================= PLAN ================= */
 let meals=[],notes=[],planLoadedFor=null;
@@ -778,11 +798,12 @@ function loadPlan(){
     setTypeSelect(p.kind);$('plan-next').value=p.nextControl||'';$('plan-responsable').value=p.responsable||'';
     meals=p.meals.map(m=>({...m}));notes=p.notes.slice();$('plan-libre').value=p.libre;$('plan-veg').checked=p.veg;
     setMacroInputs(p.macro);
-    if(!state.plans.find(x=>x.studentId===sid)?.macro){const ty=PLAN_TYPES.find(x=>x[0]===$('plan-type').value);if(ty&&ty[1]!=null)preset(ty[1],ty[2],ty[3],true);}
+    if(!state.plans.find(x=>x.studentId===sid)?.macro){const ty=planTypes().find(x=>x.name===$('plan-type').value);if(ty)applyValues(ty);}
+    if(!num($('m-pact').value)){const le=lastEval(sid);if(le){$('m-pact').value=le.peso;updateCalc();}}
   }else{
-    $('plan-type').value=PLAN_TYPES[0][0];$('plan-next').value='';$('plan-responsable').value='';
+    $('plan-type').value=planTypes()[0].name;$('plan-next').value='';$('plan-responsable').value='';
     loadTemplate(false);
-    const le=lastEval(sid);setMacroInputs({...DEFAULT_MACRO,peso:le?num(le.peso):DEFAULT_MACRO.peso});
+    const le=lastEval(sid);const ty0=planTypes()[0];setMacroInputs({...DEFAULT_MACRO,peso:le?num(le.peso):DEFAULT_MACRO.peso,pesoActual:le?num(le.peso):'',pp:ty0.pp,pg:ty0.pg,pc:ty0.pc,fk:ty0.fk});
   }
   renderMeals();renderNotes();updateCalc();
 }
@@ -791,8 +812,8 @@ function loadTemplate(ask){
   meals=TEMPLATE_MEALS.map(m=>({...m}));notes=TEMPLATE_NOTES.slice();$('plan-libre').value=TEMPLATE_LIBRE;$('plan-veg').checked=true;
   $('m-n').value=meals.length;renderMeals();renderNotes();updateCalc();if(ask)toast('Plantilla maestra cargada');
 }
-function setMacroInputs(m){setTimeout(syncTypeButtons);$('m-peso').value=m.peso;$('m-fk').value=m.fk||25;syncFk();['pp','pg','pc'].forEach(k=>{$('m-'+k).value=m[k];$('r-'+k).value=m[k];});$('m-n').value=meals.length||m.n;}
-function readMacro(){return {peso:num($('m-peso').value),fk:num($('m-fk').value),pp:num($('m-pp').value),pg:num($('m-pg').value),pc:num($('m-pc').value),n:meals.length||1};}
+function setMacroInputs(m){setTimeout(syncTypeButtons);$('m-peso').value=m.peso;$('m-pact').value=m.pesoActual||'';setBase(m.base||'ideal');$('m-fk').value=m.fk||25;syncFk();['pp','pg','pc'].forEach(k=>{$('m-'+k).value=m[k];$('r-'+k).value=m[k];});$('m-n').value=meals.length||m.n;}
+function readMacro(){return {peso:num($('m-peso').value),pesoActual:num($('m-pact').value)||'',base:curBase,fk:num($('m-fk').value),pp:num($('m-pp').value),pg:num($('m-pg').value),pc:num($('m-pc').value),n:meals.length||1};}
 $('plan-student').addEventListener('change',loadPlan);
 
 function updateCalc(){
@@ -803,7 +824,7 @@ function updateCalc(){
   if(!r.ok){['o-kcal','o-pk','o-gk','o-ck','o-kpm','o-pg','o-gg','o-cg'].forEach(id=>$(id).textContent='—');['o-ppm','o-gpm','o-cpm'].forEach(id=>$(id).textContent='Corrige los %');
     ['d-p','d-g','d-c'].forEach(id=>$(id).setAttribute('stroke-dasharray','0 100'));
     const s=r.sum||1;$('sb-p').style.width=r.pp/Math.max(100,s)*100+'%';$('sb-g').style.width=r.pg/Math.max(100,s)*100+'%';$('sb-c').style.width=r.pc/Math.max(100,s)*100+'%';
-    $('sum-status').innerHTML='';
+    $('sum-status').innerHTML='';renderTypeActive(r);
     document.querySelectorAll('[data-target]').forEach(el=>el.innerHTML='<span class="chip warn">⚠ Macros pendientes: los % deben sumar 100</span>');return;}
   $('o-kcal').textContent=fmt(r.kcal);$('o-pk').textContent=fmt(r.protK)+' kcal';$('o-gk').textContent=fmt(r.fatK)+' kcal';$('o-ck').textContent=fmt(r.carbK)+' kcal';
   $('o-kpm').textContent=fmt(r.perMeal.k)+' kcal';
@@ -813,44 +834,90 @@ function updateCalc(){
   [['d-p',r.protK],['d-g',r.fatK],['d-c',r.carbK]].forEach(([id,v])=>{const pct=v/tot*100;const c=$(id);c.setAttribute('stroke-dasharray',`${pct} ${100-pct}`);c.setAttribute('stroke-dashoffset',`${-off}`);off+=pct;});
   const s=r.sum||1;$('sb-p').style.width=r.pp/Math.max(100,s)*100+'%';$('sb-g').style.width=r.pg/Math.max(100,s)*100+'%';$('sb-c').style.width=r.pc/Math.max(100,s)*100+'%';
   const st=$('sum-status');st.innerHTML=Math.round(r.sum)===100?'<span style="color:#69f2b6">✓ Suma 100%</span>':`<span style="color:#ff9b9b">⚠ La suma es ${fmt(r.sum)}% — debe ser 100%</span>`;
-  const le=lastEval($('plan-student').value);$('m-peso-hint').textContent=le?`Peso actual (último control): ${le.peso} kg`:'';
+  const le=lastEval($('plan-student').value);$('m-pact-hint').textContent=le?`Último control: ${le.peso} kg (${fdate(le.fecha)})`:'';
+  {const pa=num($('m-pact').value),pi=num($('m-peso').value);$('m-peso-hint').innerHTML=pa>0&&pi>0?(Math.abs(pa-pi)<0.05?'✓ Ya está en su peso meta':`Meta: ${pi<pa?'bajar':'subir'} <b>${fmt(Math.abs(pa-pi),1)} kg</b>`):'';}
+  renderTypeActive(r);
   document.querySelectorAll('[data-target]').forEach(el=>{el.innerHTML=`<span class="chip" style="--c:var(--prot)"><i></i>P ${fmt(r.perMeal.p,0)} g</span><span class="chip" style="--c:var(--fat)"><i></i>G ${fmt(r.perMeal.g,0)} g</span><span class="chip" style="--c:var(--carb)"><i></i>C ${fmt(r.perMeal.c,0)} g</span><span class="chip">≈ ${fmt(r.perMeal.k)} kcal</span>`;});
 }
-['m-peso','m-fk'].forEach(id=>$(id).addEventListener('input',()=>{syncFk();updateCalc();}));
+['m-peso','m-pact'].forEach(id=>$(id).addEventListener('input',updateCalc));
+$('m-fk').addEventListener('input',()=>{syncFk();syncTypeFromPct();updateCalc();});
+let curBase='ideal';
+function setBase(b){curBase=b==='actual'?'actual':'ideal';document.querySelectorAll('#base-seg [data-base]').forEach(x=>x.classList.toggle('on',x.dataset.base===curBase));}
+$('base-seg').addEventListener('click',e=>{const b=e.target.closest('[data-base]');if(!b)return;if(b.dataset.base==='actual'&&!(num($('m-pact').value)>0)){toast('Ingresa el peso actual primero');$('m-pact').focus();return;}setBase(b.dataset.base);updateCalc();});
 function syncFk(){const v=String(num($('m-fk').value));document.querySelectorAll('#fk-btns [data-fk]').forEach(b=>{b.classList.toggle('primary',b.dataset.fk===v);b.classList.toggle('ghost',b.dataset.fk!==v);});}
-$('fk-btns').addEventListener('click',e=>{const b=e.target.closest('[data-fk]');if(!b)return;$('m-fk').value=b.dataset.fk;syncFk();updateCalc();});
+$('fk-btns').addEventListener('click',e=>{const b=e.target.closest('[data-fk]');if(!b)return;$('m-fk').value=b.dataset.fk;syncFk();syncTypeFromPct();updateCalc();});
 ['pp','pg','pc'].forEach(k=>{
   $('m-'+k).addEventListener('input',()=>{$('r-'+k).value=$('m-'+k).value;syncTypeFromPct();updateCalc();});
   $('r-'+k).addEventListener('input',()=>{$('m-'+k).value=$('r-'+k).value;syncTypeFromPct();updateCalc();});
 });
-const PLAN_TYPES=[
-  ['Plan maestro',40,30,30,'Maestra'],
-  ['Volumen / Ganancia muscular',35,25,40,'Volumen'],
-  ['Definición / Déficit calórico',45,35,20,'Definición'],
-  ['Recomposición corporal',40,30,30,'Recomposición'],
-  ['Rendimiento deportivo',30,25,45,'Rendimiento'],
-  ['Plan base saludable',30,30,40,'Saludable'],
-  ['Personalizado',null,null,null]
+const DEFAULT_TYPES=[
+  {name:'Plan maestro',short:'Maestra',pp:40,pg:30,pc:30,fk:25},
+  {name:'Organización habitual',short:'Habitual',pp:30,pg:30,pc:40,fk:30},
+  {name:'Déficit calórico',short:'Déficit',pp:40,pg:30,pc:30,fk:22},
+  {name:'Definición',short:'Definición',pp:45,pg:35,pc:20,fk:25},
+  {name:'Volumen / Ganancia muscular',short:'Volumen',pp:35,pg:25,pc:40,fk:35},
+  {name:'Recomposición corporal',short:'Recomposición',pp:40,pg:30,pc:30,fk:28},
+  {name:'Rendimiento deportivo',short:'Rendimiento',pp:30,pg:25,pc:45,fk:35},
+  {name:'Plan base saludable',short:'Saludable',pp:30,pg:30,pc:40,fk:28}
 ];
-const OLD_KINDS={'Organización habitual':'Plan maestro','Déficit calórico':'Definición / Déficit calórico'};
-$('plan-type').innerHTML=PLAN_TYPES.map(([n,p,g,c])=>`<option value="${esc(n)}">${esc(n)}${p!=null?` · ${p}/${g}/${c}`:''}</option>`).join('');
-$('preset-btns').innerHTML=PLAN_TYPES.filter(x=>x[1]!=null&&x[0]!=='Recomposición corporal').map(([n,p,g,c,s])=>`<button class="btn sm ghost" type="button" data-type="${esc(n)}">${p}/${g}/${c} · ${esc(s)}</button>`).join('');
-$('preset-btns').addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(b)applyPlanType(b.dataset.type);});
-function setTypeSelect(kind){kind=OLD_KINDS[kind]||kind;$('plan-type').value=PLAN_TYPES.some(x=>x[0]===kind)?kind:'Personalizado';}
-function applyPlanType(name){
-  const ty=PLAN_TYPES.find(x=>x[0]===name);if(!ty)return;$('plan-type').value=name;
-  if(ty[1]!=null){preset(ty[1],ty[2],ty[3],true);toast(name+': '+ty[1]+'% proteína · '+ty[2]+'% grasa · '+ty[3]+'% carbohidratos');}
-  else syncTypeButtons();
+const MANUAL='Personalizado (manual)';
+const OLD_KINDS={'Definición / Déficit calórico':'Definición','Personalizado':MANUAL};
+function planTypes(){return Array.isArray(state.config.planTypes)&&state.config.planTypes.length?state.config.planTypes:DEFAULT_TYPES;}
+function savePlanTypes(list){state.config.planTypes=list;try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function buildPlanTypes(){
+  const cur=$('plan-type').value;
+  $('plan-type').innerHTML=planTypes().map(x=>`<option value="${esc(x.name)}">${esc(x.name)} · ${x.pp}/${x.pg}/${x.pc} · ${x.fk} kcal/kg</option>`).join('')+`<option value="${MANUAL}">✏️ ${MANUAL}</option>`;
+  $('plan-type').value=[...$('plan-type').options].some(o=>o.value===cur)?cur:planTypes()[0].name;
+  $('preset-btns').innerHTML=planTypes().map(x=>`<button class="btn sm ghost" type="button" data-type="${esc(x.name)}" title="${esc(x.name)}">${esc(x.short||x.name)} · ${x.pp}/${x.pg}/${x.pc} · ${x.fk}</button>`).join('')+`<button class="btn sm ghost" type="button" data-type="${MANUAL}">✏️ Manual</button>`;
+  renderPlanTypeEditor();syncTypeButtons();
 }
-function preset(p,g,c,keepType){[['pp',p],['pg',g],['pc',c]].forEach(([k,v])=>{$('m-'+k).value=v;$('r-'+k).value=v;});if(!keepType)syncTypeFromPct();updateCalc();syncTypeButtons();}
+$('preset-btns').addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(b)applyPlanType(b.dataset.type);});
+function setTypeSelect(kind){kind=OLD_KINDS[kind]||kind;$('plan-type').value=[...$('plan-type').options].some(o=>o.value===kind)?kind:MANUAL;}
+function applyValues(ty){[['pp',ty.pp],['pg',ty.pg],['pc',ty.pc]].forEach(([k,v])=>{$('m-'+k).value=v;$('r-'+k).value=v;});$('m-fk').value=ty.fk;syncFk();updateCalc();syncTypeButtons();}
+function applyPlanType(name){
+  $('plan-type').value=name;
+  const ty=planTypes().find(x=>x.name===name);
+  if(ty){applyValues(ty);toast(`${ty.name}: ${ty.pp}% prot · ${ty.pg}% grasa · ${ty.pc}% carbos · ${ty.fk} kcal/kg`);}
+  else{syncTypeButtons();updateCalc();toast('Modo manual: ajusta los % y las kcal/kg a tu gusto');$('m-pp').focus();}
+}
+function preset(p,g,c){applyValues({pp:p,pg:g,pc:c,fk:num($('m-fk').value)||25});syncTypeFromPct();}
 function syncTypeFromPct(){
-  const cur=PLAN_TYPES.find(x=>x[0]===$('plan-type').value);
-  const pp=num($('m-pp').value),pg=num($('m-pg').value),pc=num($('m-pc').value);
-  if(cur&&cur[1]===pp&&cur[2]===pg&&cur[3]===pc)return;
-  const m=PLAN_TYPES.find(x=>x[1]===pp&&x[2]===pg&&x[3]===pc);$('plan-type').value=m?m[0]:'Personalizado';syncTypeButtons();
+  const pp=num($('m-pp').value),pg=num($('m-pg').value),pc=num($('m-pc').value),fk=num($('m-fk').value);
+  const eq=x=>x&&x.pp===pp&&x.pg===pg&&x.pc===pc&&x.fk===fk;
+  if(eq(planTypes().find(x=>x.name===$('plan-type').value)))return;
+  const m=planTypes().find(eq);$('plan-type').value=m?m.name:MANUAL;syncTypeButtons();
 }
 function syncTypeButtons(){const v=$('plan-type').value;document.querySelectorAll('#preset-btns [data-type]').forEach(b=>{const on=b.dataset.type===v;b.classList.toggle('primary',on);b.classList.toggle('ghost',!on);});}
+function renderTypeActive(r){
+  const v=$('plan-type').value;
+  $('type-active').innerHTML=`<span>${v===MANUAL?'✏️':'📌'} ${esc(v)}</span><span style="color:#c9ced6;font-weight:600">· ${fmt(r.pp)}/${fmt(r.pg)}/${fmt(r.pc)} · ${fmt(r.fk)} kcal/kg × ${fmt(r.peso,1)} kg (${r.base==='actual'?'peso actual':'peso ideal'})${r.ok?' = <b style="color:#ffde8a">'+fmt(r.kcal)+' kcal</b>':''}</span>`;
+}
 $('plan-type').addEventListener('change',()=>applyPlanType($('plan-type').value));
+
+/* editor de tipos de plan */
+function renderPlanTypeEditor(){
+  $('pt-list').innerHTML=planTypes().map((x,i)=>{const s=x.pp+x.pg+x.pc;return `<div class="pt-row" data-pi="${i}">
+    <div class="pt-name"><label>Nombre del plan</label><input data-k="name" value="${esc(x.name)}"></div>
+    <div><label>% Prot</label><input data-k="pp" type="number" inputmode="numeric" value="${x.pp}"></div>
+    <div><label>% Grasa</label><input data-k="pg" type="number" inputmode="numeric" value="${x.pg}"></div>
+    <div><label>% Carbos</label><input data-k="pc" type="number" inputmode="numeric" value="${x.pc}"></div>
+    <div><label>kcal/kg</label><input data-k="fk" type="number" inputmode="numeric" value="${x.fk}"></div>
+    <div class="ok" style="color:${s===100?'#69f2b6':'#ff6b6b'}">${s===100?'✓ 100%':'⚠ '+s+'%'}</div>
+    <button class="btn sm danger icon" type="button" onclick="delPlanType(${i})" title="Eliminar">✕</button></div>`;}).join('');
+}
+$('pt-list').addEventListener('change',e=>{
+  const row=e.target.closest('[data-pi]'),k=e.target.dataset.k;if(!row||!k)return;
+  const list=planTypes().map(x=>({...x})),it=list[+row.dataset.pi];
+  if(k==='name'){const v=e.target.value.trim();if(!v||v===MANUAL){e.target.value=it.name;return;}if(it.short===it.name)it.short=v;it.name=v;}
+  else it[k]=Math.max(0,Math.round(num(e.target.value)));
+  savePlanTypes(list);buildPlanTypes();
+  if($('plan-type').value===it.name)applyValues(it);
+  toast('Tipo de plan actualizado');
+});
+function addPlanType(){const list=planTypes().map(x=>({...x}));let n=1;while(list.some(x=>x.name==='Mi plan '+n))n++;list.push({name:'Mi plan '+n,short:'Mi plan '+n,pp:num($('m-pp').value)||40,pg:num($('m-pg').value)||30,pc:num($('m-pc').value)||30,fk:num($('m-fk').value)||25});savePlanTypes(list);buildPlanTypes();toast('Nuevo tipo creado con los valores actuales');}
+function delPlanType(i){const list=planTypes().map(x=>({...x}));if(list.length<=1){toast('Debe quedar al menos un tipo de plan');return;}if(!confirm('¿Eliminar el tipo "'+list[i].name+'"?'))return;list.splice(i,1);savePlanTypes(list);buildPlanTypes();updateCalc();}
+function resetPlanTypes(){if(!confirm('¿Volver a los valores originales de todos los tipos de plan?'))return;delete state.config.planTypes;savePlanTypes(undefined);delete state.config.planTypes;try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}buildPlanTypes();toast('Valores restablecidos');}
+buildPlanTypes();
 $('m-n').addEventListener('change',()=>setMealCount(Math.round(num($('m-n').value))));
 function stepMeals(d){setMealCount(meals.length+d);}
 function setMealCount(n){
@@ -937,7 +1004,7 @@ function renderReport(){
       <h4>Requerimiento diario · ${esc(p.kind||'')}</h4>
       <div class="report-grid four">${kpi('Calorías',fmt(r.kcal),'kcal / día','#8f6b1b')}${kpi('Proteína',fmt(r.protG,0)+' g',fmt(r.pp)+'% · '+fmt(r.protK)+' kcal','#e6a91a')}${kpi('Grasa',fmt(r.fatG,0)+' g',fmt(r.pg)+'% · '+fmt(r.fatK)+' kcal','#ee6b3a')}${kpi('Carbohidratos',fmt(r.carbG,0)+' g',fmt(r.pc)+'% · '+fmt(r.carbK)+' kcal','#1e9fe0')}</div>
       <div class="rbar"><div style="width:${r.protK/tot*100}%;background:#e6a91a"></div><div style="width:${r.fatK/tot*100}%;background:#ee6b3a"></div><div style="width:${r.carbK/tot*100}%;background:#1e9fe0"></div></div>
-      <p style="font-size:11.5px;color:#666;margin:4px 0 0">Base: ${fmt(r.peso,1)} kg × ${fmt(r.fk)} kcal/kg = ${fmt(r.kcal)} kcal (${fmt(r.gpk,1)} g de proteína/kg) · ${r.n} comidas al día → por comida: <b>${fmt(r.perMeal.p,0)} g proteína · ${fmt(r.perMeal.g,0)} g grasa · ${fmt(r.perMeal.c,0)} g carbohidratos</b> (≈ ${fmt(r.perMeal.k)} kcal)</p>
+      <p style="font-size:11.5px;color:#666;margin:4px 0 0">${r.pesoActual?'Peso actual '+fmt(r.pesoActual,1)+' kg · ':''}Peso ideal ${fmt(r.pesoIdeal,1)} kg · Cálculo: ${fmt(r.peso,1)} kg (${r.base==='actual'?'actual':'ideal'}) × ${fmt(r.fk)} kcal/kg = ${fmt(r.kcal)} kcal (${fmt(r.gpk,1)} g de proteína/kg) · ${r.n} comidas al día → por comida: <b>${fmt(r.perMeal.p,0)} g proteína · ${fmt(r.perMeal.g,0)} g grasa · ${fmt(r.perMeal.c,0)} g carbohidratos</b> (≈ ${fmt(r.perMeal.k)} kcal)</p>
       <h4>Plan de alimentación</h4>
       <table><thead><tr><th style="width:24%">Comida</th><th>Alimentos</th><th style="width:26%">Suplementación</th></tr></thead><tbody>
       ${p.meals.map(m=>`<tr><td><b>${esc(m.name)}</b>${m.time?'<br><span style="color:#8f6b1b;font-weight:700">'+esc(m.time)+'</span>':''}</td><td>${esc(m.food||'—')}</td><td>${esc(m.supp||'—')}</td></tr>`).join('')}
@@ -989,7 +1056,7 @@ $('restore-file').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;const rd=new FileReader();
   rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!Array.isArray(o.students))throw 0;
     if(!confirm('¿Reemplazar los datos actuales por el respaldo ('+o.students.length+' alumnos)?'))return;
-    state={students:o.students,evals:o.evals||[],plans:o.plans||[],workouts:o.workouts||[]};persist();planLoadedFor=null;toast('Respaldo restaurado');}catch(err){toast('Archivo de respaldo no válido');}};
+    state={students:o.students,evals:o.evals||[],plans:o.plans||[],workouts:o.workouts||[],config:o.config||{}};buildPlanTypes();persist();planLoadedFor=null;toast('Respaldo restaurado');}catch(err){toast('Archivo de respaldo no válido');}};
   rd.readAsText(f);e.target.value='';
 });
 
