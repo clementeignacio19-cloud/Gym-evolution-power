@@ -449,7 +449,7 @@ td{font-size:13px;color:#edf1f5}
         </div>
         <div class="fieldgrid four">
           <div class="field"><label>Alumno</label><select id="plan-student"></select></div>
-          <div class="field"><label>Tipo de plan</label><select id="plan-type"><option>Organización habitual</option><option>Déficit calórico</option><option>Volumen / Ganancia muscular</option><option>Rendimiento deportivo</option><option>Plan base saludable</option></select></div>
+          <div class="field"><label>Tipo de plan · define los macros</label><select id="plan-type"></select></div>
           <div class="field"><label>Próximo control</label><input id="plan-next" type="date"></div>
           <div class="field"><label>Responsable</label><input id="plan-responsable" placeholder="Quien entrega la pauta"></div>
         </div>
@@ -474,9 +474,7 @@ td{font-size:13px;color:#edf1f5}
             <div class="sumbar"><div id="sb-p" style="background:var(--prot)"></div><div id="sb-g" style="background:var(--fat)"></div><div id="sb-c" style="background:var(--carb)"></div></div>
             <div class="sum-status" id="sum-status"></div>
             <div class="actions" style="margin-top:10px">
-              <button class="btn sm ghost" type="button" onclick="preset(40,30,30)">40/30/30 · Maestra</button>
-              <button class="btn sm ghost" type="button" onclick="preset(35,25,40)">35/25/40 · Volumen</button>
-              <button class="btn sm ghost" type="button" onclick="preset(45,35,20)">45/35/20 · Definición</button>
+              <span id="preset-btns" style="display:contents"></span>
             </div>
             <div class="formula">
               Proteína/día = <code>peso × g/kg</code> · Kcal proteína = <code>g × 4</code><br>
@@ -774,11 +772,12 @@ function loadPlan(){
   const sid=$('plan-student').value;planLoadedFor=sid||'__none';
   const p=normPlan(state.plans.find(x=>x.studentId===sid));
   if(p){
-    $('plan-type').value=p.kind||'Organización habitual';$('plan-next').value=p.nextControl||'';$('plan-responsable').value=p.responsable||'';
+    setTypeSelect(p.kind);$('plan-next').value=p.nextControl||'';$('plan-responsable').value=p.responsable||'';
     meals=p.meals.map(m=>({...m}));notes=p.notes.slice();$('plan-libre').value=p.libre;$('plan-veg').checked=p.veg;
     setMacroInputs(p.macro);
+    if(!state.plans.find(x=>x.studentId===sid)?.macro){const ty=PLAN_TYPES.find(x=>x[0]===$('plan-type').value);if(ty&&ty[1]!=null)preset(ty[1],ty[2],ty[3],true);}
   }else{
-    $('plan-type').value='Organización habitual';$('plan-next').value='';$('plan-responsable').value='';
+    $('plan-type').value=PLAN_TYPES[0][0];$('plan-next').value='';$('plan-responsable').value='';
     loadTemplate(false);
     const le=lastEval(sid);setMacroInputs({...DEFAULT_MACRO,peso:le?num(le.peso):DEFAULT_MACRO.peso});
   }
@@ -789,7 +788,7 @@ function loadTemplate(ask){
   meals=TEMPLATE_MEALS.map(m=>({...m}));notes=TEMPLATE_NOTES.slice();$('plan-libre').value=TEMPLATE_LIBRE;$('plan-veg').checked=true;
   $('m-n').value=meals.length;renderMeals();renderNotes();updateCalc();if(ask)toast('Plantilla maestra cargada');
 }
-function setMacroInputs(m){$('m-peso').value=m.peso;$('m-gpk').value=m.gpk;['pp','pg','pc'].forEach(k=>{$('m-'+k).value=m[k];$('r-'+k).value=m[k];});$('m-n').value=meals.length||m.n;}
+function setMacroInputs(m){setTimeout(syncTypeButtons);$('m-peso').value=m.peso;$('m-gpk').value=m.gpk;['pp','pg','pc'].forEach(k=>{$('m-'+k).value=m[k];$('r-'+k).value=m[k];});$('m-n').value=meals.length||m.n;}
 function readMacro(){return {peso:num($('m-peso').value),gpk:num($('m-gpk').value),pp:num($('m-pp').value),pg:num($('m-pg').value),pc:num($('m-pc').value),n:meals.length||1};}
 $('plan-student').addEventListener('change',loadPlan);
 
@@ -808,10 +807,37 @@ function updateCalc(){
 }
 ['m-peso','m-gpk'].forEach(id=>$(id).addEventListener('input',updateCalc));
 ['pp','pg','pc'].forEach(k=>{
-  $('m-'+k).addEventListener('input',()=>{$('r-'+k).value=$('m-'+k).value;updateCalc();});
-  $('r-'+k).addEventListener('input',()=>{$('m-'+k).value=$('r-'+k).value;updateCalc();});
+  $('m-'+k).addEventListener('input',()=>{$('r-'+k).value=$('m-'+k).value;syncTypeFromPct();updateCalc();});
+  $('r-'+k).addEventListener('input',()=>{$('m-'+k).value=$('r-'+k).value;syncTypeFromPct();updateCalc();});
 });
-function preset(p,g,c){[['pp',p],['pg',g],['pc',c]].forEach(([k,v])=>{$('m-'+k).value=v;$('r-'+k).value=v;});updateCalc();}
+const PLAN_TYPES=[
+  ['Plan maestro',40,30,30,'Maestra'],
+  ['Volumen / Ganancia muscular',35,25,40,'Volumen'],
+  ['Definición / Déficit calórico',45,35,20,'Definición'],
+  ['Recomposición corporal',40,30,30,'Recomposición'],
+  ['Rendimiento deportivo',30,25,45,'Rendimiento'],
+  ['Plan base saludable',30,30,40,'Saludable'],
+  ['Personalizado',null,null,null]
+];
+const OLD_KINDS={'Organización habitual':'Plan maestro','Déficit calórico':'Definición / Déficit calórico'};
+$('plan-type').innerHTML=PLAN_TYPES.map(([n,p,g,c])=>`<option value="${esc(n)}">${esc(n)}${p!=null?` · ${p}/${g}/${c}`:''}</option>`).join('');
+$('preset-btns').innerHTML=PLAN_TYPES.filter(x=>x[1]!=null&&x[0]!=='Recomposición corporal').map(([n,p,g,c,s])=>`<button class="btn sm ghost" type="button" data-type="${esc(n)}">${p}/${g}/${c} · ${esc(s)}</button>`).join('');
+$('preset-btns').addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(b)applyPlanType(b.dataset.type);});
+function setTypeSelect(kind){kind=OLD_KINDS[kind]||kind;$('plan-type').value=PLAN_TYPES.some(x=>x[0]===kind)?kind:'Personalizado';}
+function applyPlanType(name){
+  const ty=PLAN_TYPES.find(x=>x[0]===name);if(!ty)return;$('plan-type').value=name;
+  if(ty[1]!=null){preset(ty[1],ty[2],ty[3],true);toast(name+': '+ty[1]+'% proteína · '+ty[2]+'% grasa · '+ty[3]+'% carbohidratos');}
+  else syncTypeButtons();
+}
+function preset(p,g,c,keepType){[['pp',p],['pg',g],['pc',c]].forEach(([k,v])=>{$('m-'+k).value=v;$('r-'+k).value=v;});if(!keepType)syncTypeFromPct();updateCalc();syncTypeButtons();}
+function syncTypeFromPct(){
+  const cur=PLAN_TYPES.find(x=>x[0]===$('plan-type').value);
+  const pp=num($('m-pp').value),pg=num($('m-pg').value),pc=num($('m-pc').value);
+  if(cur&&cur[1]===pp&&cur[2]===pg&&cur[3]===pc)return;
+  const m=PLAN_TYPES.find(x=>x[1]===pp&&x[2]===pg&&x[3]===pc);$('plan-type').value=m?m[0]:'Personalizado';syncTypeButtons();
+}
+function syncTypeButtons(){const v=$('plan-type').value;document.querySelectorAll('#preset-btns [data-type]').forEach(b=>{const on=b.dataset.type===v;b.classList.toggle('primary',on);b.classList.toggle('ghost',!on);});}
+$('plan-type').addEventListener('change',()=>applyPlanType($('plan-type').value));
 $('m-n').addEventListener('change',()=>setMealCount(Math.round(num($('m-n').value))));
 function stepMeals(d){setMealCount(meals.length+d);}
 function setMealCount(n){
