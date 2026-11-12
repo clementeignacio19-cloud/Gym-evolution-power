@@ -223,6 +223,12 @@ td{font-size:13px;color:#edf1f5}
 .veg-box h4{margin:0 0 10px;font-size:14px}
 .veg-box.free h4{color:#69f2b6}.veg-box.count h4{color:#f1d38e}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{display:inline-flex;align-items:center;gap:6px;}
+.chips span button{border:0;background:rgba(255,255,255,.08);color:#ff9b9b;width:18px;height:18px;border-radius:50%;font-size:11px;line-height:18px;padding:0;font-weight:900}
+.veg-add{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.veg-add input{flex:1 1 140px;min-width:0;background:#0b0c0e;border:1px solid #262931;color:#fff;border-radius:11px;padding:9px 11px;min-height:40px}
+.veg-add input.qty{flex:0 1 120px}
+@media(max-width:900px){.veg-add input{font-size:16px}}
 .chips span{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#141518;border:1px solid #2a2d33}
 .veg-box.free .chips span{border-color:rgba(48,211,139,.25);color:#bff5dc}
 .veg-box.count .chips span{border-color:rgba(213,178,95,.25);color:#f3dfae}
@@ -266,6 +272,9 @@ td{font-size:13px;color:#edf1f5}
 .report-wrap ul{margin:0;padding-left:18px}
 .report-wrap li{margin:3px 0;font-size:13px}
 .rbar{display:flex;height:12px;border-radius:99px;overflow:hidden;margin:6px 0 4px}
+.pdf-mode{max-width:none!important;width:100%!important;border:0!important;border-radius:0!important;padding:0!important;margin:0!important;box-shadow:none!important}
+.pdf-mode .report-header{flex-direction:row!important}.pdf-mode .report-header>div:last-child{text-align:right!important}
+.pdf-mode .report-grid{grid-template-columns:repeat(2,1fr)!important}.pdf-mode .report-grid.three{grid-template-columns:repeat(3,1fr)!important}.pdf-mode .report-grid.four{grid-template-columns:repeat(4,1fr)!important}
 .print-note{margin-top:24px;padding-top:18px;border-top:1px dashed #ccc;color:#555;font-size:11px}
 .toast{position:fixed;right:20px;bottom:20px;background:#101113;color:#fff;padding:12px 16px;border:1px solid #3a3427;border-radius:14px;box-shadow:var(--shadow);z-index:1000;max-width:360px;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}
 .toast.show{opacity:1;transform:none;pointer-events:auto}
@@ -553,8 +562,10 @@ td{font-size:13px;color:#edf1f5}
           <div class="rowhead"><div><h3>🥬 Verduras</h3><p class="desc" style="margin:0">Guía de la planilla maestra.</p></div>
             <label class="chip" style="cursor:pointer"><input type="checkbox" id="plan-veg" checked style="accent-color:var(--gold)"> Incluir en PDF</label></div>
           <div class="veg">
-            <div class="veg-box free"><h4>✅ Priorizar · consumo libre diario</h4><div class="chips" id="veg-free"></div></div>
-            <div class="veg-box count"><h4>⚖️ Contabilizar · según dieta</h4><div class="chips" id="veg-count"></div></div>
+            <div class="veg-box free"><h4>✅ Priorizar · consumo libre diario</h4><div class="chips" id="veg-free"></div>
+              <div class="veg-add"><input id="vf-name" placeholder="Agregar verdura, ej. Kale"><button class="btn sm green" type="button" onclick="addVeg('free')">+ Agregar</button></div></div>
+            <div class="veg-box count"><h4>⚖️ Contabilizar · cantidad según dieta</h4><div class="chips" id="veg-count"></div>
+              <div class="veg-add"><input id="vc-name" placeholder="Verdura / alimento, ej. Choclo"><input id="vc-qty" class="qty" placeholder="Cantidad, ej. 80 g"><button class="btn sm primary" type="button" onclick="addVeg('count')">+ Agregar</button></div></div>
           </div>
         </div>
       </div>
@@ -587,15 +598,15 @@ td{font-size:13px;color:#edf1f5}
       <div class="photo-banner informe no-print"><div class="photo-copy"><div class="eyebrow">Evolution Power · Laguna Verde</div><h3>RESULTADOS QUE INSPIRAN</h3><p>Transforma la evaluación en un informe elegante para compartir con cada alumno.</p></div></div>
       <div class="card no-print" style="margin-bottom:18px">
         <div class="rowhead">
-          <div><h3>Informe listo para PDF</h3><p class="desc" style="margin:0">Selecciona alumno y documento. Luego “Guardar como PDF”.</p></div>
-          <div class="actions"><button class="btn secondary sm" onclick="exportCSV('alumnos')">CSV alumnos</button><button class="btn secondary sm" onclick="exportCSV('evaluaciones')">CSV evaluaciones</button><button class="btn primary" onclick="printCurrentReport()">🧾 Guardar como PDF</button></div>
+          <div><h3>Informe listo para PDF</h3><p class="desc" style="margin:0">Selecciona alumno y documento, y presiona “Descargar PDF”.</p></div>
+          <div class="actions"><button class="btn secondary sm" onclick="exportCSV('alumnos')">CSV alumnos</button><button class="btn secondary sm" onclick="exportCSV('evaluaciones')">CSV evaluaciones</button><button class="btn primary" id="pdf-btn" onclick="downloadPDF()">⬇️ Descargar PDF</button><button class="btn ghost sm" onclick="printCurrentReport()" title="Imprimir">🖨️</button></div>
         </div>
         <div class="fieldgrid">
           <div class="field"><label>Alumno</label><select id="report-student"></select></div>
           <div class="field"><label>Documento</label><select id="report-mode"><option value="evaluacion">Evaluación completa</option><option value="nutricion">Pauta nutricional</option><option value="entrenamiento">Plan semanal de entrenamiento</option></select></div>
           <div class="field" id="report-eval-container"><label>Evaluación</label><select id="report-eval"></select></div>
         </div>
-        <p class="small-note">En el celular: Compartir → Imprimir → Guardar PDF. En Chrome/Edge: Imprimir → Guardar como PDF.</p>
+        <p class="small-note">El PDF se descarga directo a tu equipo o celular. 🖨️ abre la impresión si prefieres imprimir.</p>
       </div>
       <div class="report-wrap" id="report-content">
         <div class="report-header">
@@ -810,7 +821,7 @@ function loadPlan(){
   const p=normPlan(state.plans.find(x=>x.studentId===sid));
   if(p){
     setTypeSelect(p.kind);$('plan-next').value=p.nextControl||'';$('plan-responsable').value=p.responsable||'';
-    meals=p.meals.map(m=>({...m}));notes=p.notes.slice();$('plan-libre').value=p.libre;$('plan-veg').checked=p.veg;
+    meals=p.meals.map(m=>({...m}));notes=p.notes.slice();vegFree=(p.vegFree||VEG_FREE).slice();vegCount=(p.vegCount||VEG_COUNT).slice();renderVeg();$('plan-libre').value=p.libre;$('plan-veg').checked=p.veg;
     setMacroInputs(p.macro);
     if(!state.plans.find(x=>x.studentId===sid)?.macro){const ty=planTypes().find(x=>x.name===$('plan-type').value);if(ty)applyValues(ty);}
     if(!num($('m-pact').value)){const le=lastEval(sid);if(le){$('m-pact').value=le.peso;updateCalc();}}
@@ -823,7 +834,7 @@ function loadPlan(){
 }
 function loadTemplate(ask){
   if(ask&&!confirm('¿Reemplazar comidas, notas y comida libre por la plantilla maestra?'))return;
-  meals=TEMPLATE_MEALS.map(m=>({...m}));notes=TEMPLATE_NOTES.slice();$('plan-libre').value=TEMPLATE_LIBRE;$('plan-veg').checked=true;
+  meals=TEMPLATE_MEALS.map(m=>({...m}));notes=TEMPLATE_NOTES.slice();$('plan-libre').value=TEMPLATE_LIBRE;$('plan-veg').checked=true;vegFree=VEG_FREE.slice();vegCount=VEG_COUNT.slice();renderVeg();
   $('m-n').value=meals.length;renderMeals();renderNotes();updateCalc();if(ask)toast('Plantilla maestra cargada');
 }
 function setMacroInputs(m){setTimeout(syncTypeButtons);$('m-peso').value=m.peso;$('m-pact').value=m.pesoActual||'';setBase(m.base||'ideal');$('m-fk').value=m.fk||25;syncFk();['pp','pg','pc'].forEach(k=>{$('m-'+k).value=m[k];$('r-'+k).value=m[k];});$('m-n').value=meals.length||m.n;}
@@ -964,14 +975,27 @@ function renderNotes(){
 }
 $('notes-list').addEventListener('input',e=>{if(e.target.dataset.ni!==undefined)notes[+e.target.dataset.ni]=e.target.value;});
 function addNote(){notes.push('');renderNotes();const ins=$('notes-list').querySelectorAll('input');ins[ins.length-1]?.focus();}
-$('veg-free').innerHTML=VEG_FREE.map(v=>`<span>${esc(v)}</span>`).join('');
-$('veg-count').innerHTML=VEG_COUNT.map(v=>`<span>${esc(v)}</span>`).join('');
+let vegFree=VEG_FREE.slice(),vegCount=VEG_COUNT.slice();
+function renderVeg(){
+  const chip=(v,i,k)=>`<span>${esc(v)}<button type="button" title="Quitar" onclick="delVeg('${k}',${i})">✕</button></span>`;
+  $('veg-free').innerHTML=vegFree.length?vegFree.map((v,i)=>chip(v,i,'free')).join(''):'<em class="hint">Sin verduras</em>';
+  $('veg-count').innerHTML=vegCount.length?vegCount.map((v,i)=>chip(v,i,'count')).join(''):'<em class="hint">Sin alimentos</em>';
+}
+function addVeg(k){
+  const n=$(k==='free'?'vf-name':'vc-name'),q=$('vc-qty');let v=n.value.trim();if(!v){n.focus();return;}
+  if(k==='count'&&q.value.trim())v+=' ('+q.value.trim()+')';
+  const list=k==='free'?vegFree:vegCount;if(list.some(x=>x.toLowerCase()===v.toLowerCase())){toast('Ya está en la lista');return;}
+  list.push(v);n.value='';if(k==='count')q.value='';renderVeg();n.focus();
+}
+function delVeg(k,i){(k==='free'?vegFree:vegCount).splice(i,1);renderVeg();}
+['vf-name','vc-name','vc-qty'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addVeg(id==='vf-name'?'free':'count');}}));
+renderVeg();
 
 function savePlan(){
   const sid=$('plan-student').value;if(!sid){toast('Selecciona un alumno');$('plan-student').focus();return;}
   const macro=readMacro();if(Math.round(macro.pp+macro.pg+macro.pc)!==100){toast('⚠ Los % de macros deben sumar 100% para guardar la pauta');$('sum-alert').scrollIntoView({behavior:'smooth',block:'center'});return;}
   const plan={studentId:sid,kind:$('plan-type').value,nextControl:$('plan-next').value,responsable:$('plan-responsable').value.trim(),
-    macro,meals:meals.map(m=>({...m})),notes:notes.map(n=>n.trim()).filter(Boolean),libre:$('plan-libre').value.trim(),veg:$('plan-veg').checked,date:today()};
+    macro,meals:meals.map(m=>({...m})),notes:notes.map(n=>n.trim()).filter(Boolean),libre:$('plan-libre').value.trim(),veg:$('plan-veg').checked,vegFree:vegFree.slice(),vegCount:vegCount.slice(),date:today()};
   state.plans=state.plans.filter(p=>p.studentId!==sid);state.plans.push(plan);persist();
   $('report-student').value=sid;$('report-mode').value='nutricion';go('informe');toast('Pauta guardada. Lista para PDF.');
 }
@@ -1034,7 +1058,7 @@ function renderReport(){
       </tbody></table>
       ${p.libre?`<div class="report-box" style="background:#fff7e6"><b>🍕 Comida libre</b>${esc(p.libre)}</div>`:''}
       ${p.notes.length?`<h4>Indicaciones</h4><ul>${p.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:''}
-      ${p.veg?`<h4>Guía de verduras</h4><div class="report-grid"><div class="report-box" style="white-space:normal"><b style="color:#15803d">✓ Priorizar · consumo libre diario</b><div class="rchips">${VEG_FREE.map(v=>`<span>${esc(v)}</span>`).join('')}</div></div><div class="report-box" style="white-space:normal"><b style="color:#8f6b1b">⚖ Contabilizar · cantidad según dieta</b><div class="rchips">${VEG_COUNT.map(v=>`<span>${esc(v)}</span>`).join('')}</div></div></div>`:''}
+      ${p.veg?`<h4>Guía de verduras</h4><div class="report-grid"><div class="report-box" style="white-space:normal"><b style="color:#15803d">✓ Priorizar · consumo libre diario</b><div class="rchips">${(p.vegFree||VEG_FREE).map(v=>`<span>${esc(v)}</span>`).join('')}</div></div><div class="report-box" style="white-space:normal"><b style="color:#8f6b1b">⚖ Contabilizar · cantidad según dieta</b><div class="rchips">${(p.vegCount||VEG_COUNT).map(v=>`<span>${esc(v)}</span>`).join('')}</div></div></div>`:''}
       ${follow(p.nextControl,p.responsable)}`;
     return;
   }
@@ -1055,6 +1079,39 @@ function renderReport(){
     <div class="report-grid three">${box('Estatura',e.altura+' cm')}${box('Cintura',e.cintura?e.cintura+' cm':'No registrada')}${box('Agua declarada',e.aguaReal?e.aguaReal+' L/día':'No registrada')}${box('Creatina',e.creatina)}${box('Sueño',e.sueno)}${box('Comidas diarias',e.comidas)}</div>
     ${hist.length>1?`<h4>Historial de peso</h4><table><thead><tr><th>Fecha</th><th>Control</th><th>Peso</th><th>Variación</th></tr></thead><tbody>${hist.map((x,i)=>`<tr><td>${fdate(x.fecha)}</td><td>${esc(x.meta)}</td><td>${esc(x.peso)} kg</td><td>${i?((num(x.peso)-num(hist[i-1].peso))>=0?'+':'')+fmt(num(x.peso)-num(hist[i-1].peso),1)+' kg':'—'}</td></tr>`).join('')}</tbody></table>`:''}
     <h4>Observaciones</h4><p style="white-space:pre-wrap;font-size:13px">${esc(e.notas||'Sin observaciones registradas.')}</p>${follow(e.proximoControl,e.responsable)}`;
+}
+function reportReady(){
+  const mode=$('report-mode').value,sid=$('report-student').value;if(!sid){toast('Selecciona un alumno');return null;}
+  const has=mode==='nutricion'?state.plans.some(p=>p.studentId===sid):mode==='entrenamiento'?state.workouts.some(w=>w.studentId===sid):state.evals.some(e=>e.studentId===sid);
+  if(!has){toast('Primero guarda el documento para ese alumno');return null;}
+  const s=state.students.find(x=>x.id===sid);
+  return 'Evolution Power - '+({evaluacion:'Evaluacion',nutricion:'Pauta',entrenamiento:'Rutina'}[mode])+' - '+(s?.nombre||'alumno');
+}
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s);});}
+async function ensurePdfLib(){
+  if(window.html2pdf)return true;
+  for(const src of ['https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js','https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js']){
+    try{await loadScript(src);if(window.html2pdf)return true;}catch(e){}
+  }
+  return false;
+}
+async function downloadPDF(){
+  const name=reportReady();if(!name)return;
+  const btn=$('pdf-btn'),label=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Generando PDF…';
+  try{
+    if(!(await ensurePdfLib())){toast('No se pudo cargar el generador de PDF. Se abrirá la impresión.');printCurrentReport();return;}
+    const node=$('report-content').cloneNode(true);node.removeAttribute('id');node.classList.add('pdf-mode');
+    const sx=window.scrollX,sy=window.scrollY;window.scrollTo(0,0);
+    await html2pdf().set({
+      margin:[10,10,12,10],filename:name.replace(/[\\/:*?"<>|]/g,'')+'.pdf',
+      image:{type:'jpeg',quality:0.96},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy'],avoid:['tr','.report-box','.report-grid','h4','.rbar']}
+    }).from(node).save();
+    window.scrollTo(sx,sy);toast('✅ PDF descargado');
+  }catch(e){console.error(e);toast('Error al generar el PDF. Intenta con 🖨️ Imprimir.');}
+  finally{btn.disabled=false;btn.innerHTML=label;}
 }
 function printCurrentReport(){
   const mode=$('report-mode').value,sid=$('report-student').value;if(!sid){toast('Selecciona un alumno');return;}
