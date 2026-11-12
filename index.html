@@ -174,6 +174,10 @@ td{font-size:13px;color:#edf1f5}
 .sumbar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:#1a1b1f;margin-top:12px}
 .sumbar div{transition:width .25s}
 .sum-status{margin-top:8px;font-size:12px;font-weight:700}
+.sum-alert{margin-top:12px;padding:16px 18px;border-radius:16px;background:rgba(255,59,59,.14);border:2px solid #ff4d4d;color:#ffd0d0;font-size:15px;font-weight:800;line-height:1.35}
+.sum-alert big{display:block;font-size:20px;color:#ff6b6b;margin-bottom:4px}
+.calc-blocked .kcal-hero,.calc-blocked .macro-cards{opacity:.35;filter:grayscale(1)}
+.meal-target .chip.warn{border-color:#ff4d4d;color:#ff9b9b}
 .stepper{display:flex;align-items:center;border:1px solid #262931;border-radius:13px;background:#0b0c0e;overflow:hidden;min-height:46px}
 .stepper button{width:46px;align-self:stretch;border:0;background:#141518;color:#fff;font-size:20px;font-weight:800}
 .stepper input{flex:1;text-align:center;border:0 !important;background:transparent !important;box-shadow:none !important;font-weight:800;font-size:17px;min-width:0}
@@ -456,12 +460,12 @@ td{font-size:13px;color:#edf1f5}
       </div>
 
       <div class="card" style="margin-bottom:18px">
-        <div class="rowhead"><div><h3>⚡ Calculadora de macros</h3><p class="desc" style="margin:0">Mismas fórmulas de la planilla maestra: la proteína define las calorías totales.</p></div></div>
+        <div class="rowhead"><div><h3>⚡ Calculadora de macros</h3><p class="desc" style="margin:0">Calorías = peso × kcal/kg (25, 30 o 35). Los % reparten esas calorías entre proteína, grasa y carbohidratos.</p></div></div>
         <div class="calc">
           <div>
             <div class="fieldgrid two">
               <div class="field"><label>Peso ideal</label><div class="input-unit"><input id="m-peso" type="number" inputmode="decimal" step="0.1" min="0" value="70"><em>kg</em></div><span class="hint" id="m-peso-hint"></span></div>
-              <div class="field"><label>Proteína por kg de peso</label><div class="input-unit"><input id="m-gpk" type="number" inputmode="decimal" step="0.1" min="0" value="2"><em>g/kg</em></div></div>
+              <div class="field"><label>Calorías por kg de peso</label><div class="input-unit"><input id="m-fk" type="number" inputmode="numeric" step="1" min="15" max="50" value="25" list="fk-list"><em>kcal/kg</em></div><div class="actions" id="fk-btns" style="margin-top:2px"><button class="btn sm ghost" type="button" data-fk="25">25</button><button class="btn sm ghost" type="button" data-fk="30">30</button><button class="btn sm ghost" type="button" data-fk="35">35</button></div></div>
               <div class="field full"><label>Nº de comidas</label><div class="stepper"><button type="button" onclick="stepMeals(-1)">−</button><input id="m-n" type="number" inputmode="numeric" min="1" max="8" value="5"><button type="button" onclick="stepMeals(1)">+</button></div></div>
             </div>
             <div class="sep" style="margin:16px 0"></div>
@@ -472,13 +476,13 @@ td{font-size:13px;color:#edf1f5}
               <div class="pct" style="--c:var(--carb)"><label><i></i>Carbohidratos</label><input id="m-pc" type="number" inputmode="numeric" min="0" max="80" value="30"><input type="range" id="r-pc" min="0" max="80" value="30"></div>
             </div>
             <div class="sumbar"><div id="sb-p" style="background:var(--prot)"></div><div id="sb-g" style="background:var(--fat)"></div><div id="sb-c" style="background:var(--carb)"></div></div>
-            <div class="sum-status" id="sum-status"></div>
+            <div class="sum-status" id="sum-status"></div><div class="sum-alert hide" id="sum-alert"></div>
             <div class="actions" style="margin-top:10px">
               <span id="preset-btns" style="display:contents"></span>
             </div>
             <div class="formula">
-              Proteína/día = <code>peso × g/kg</code> · Kcal proteína = <code>g × 4</code><br>
-              Kcal totales = <code>kcal proteína × 100 ÷ % proteína</code><br>
+              Kcal totales = <code>peso × kcal/kg</code> (ej. 85 × 25 = 2.125)<br>Proteína = <code>kcal × %prot ÷ 4</code> · 
+              
               Grasa = <code>kcal × %grasa ÷ 9</code> · Carbos = <code>kcal × %carbos ÷ 4</code> · Por comida = <code>g ÷ nº comidas</code>
             </div>
           </div>
@@ -606,17 +610,16 @@ const TEMPLATE_NOTES=['2,5 a 3 litros de agua al día','Solo sal de mar','Usar s
 const TEMPLATE_LIBRE='Sábado o domingo: 1 hora de comida a libre elección';
 const VEG_FREE=['Lechuga','Apio','Repollo','Acelga','Espinacas','Berros','Albahaca','Cebollín','Cebolla','Puerros','Brócoli','Coliflor','Zapallo italiano','Berenjenas','Pepino','Rúcula','Pimentones','Champiñón','Arvejas','Alcachofa','Rábanos','Espárragos','Tomate'];
 const VEG_COUNT=['Betarragas (solo crudas ralladas)','Porotos verdes (hasta 100 g)','Papas (150 g)','Zapallo amarillo (hasta 200 g)','Zanahorias crudas','Nabos','Brotes de verduras (diente de dragón, alfalfa, arvejas…)'];
-const DEFAULT_MACRO={peso:70,gpk:2,pp:40,pg:30,pc:30,n:5};
+const DEFAULT_MACRO={peso:70,fk:25,pp:40,pg:30,pc:30,n:5};
 
 /* fórmulas exactas de la planilla */
 function calcMacros(m){
-  const peso=num(m.peso),gpk=num(m.gpk),pp=num(m.pp),pg=num(m.pg),pc=num(m.pc),n=Math.max(1,Math.round(num(m.n))||1);
-  const protG=peso*gpk;                 // C6 = H1*H3
-  const protK=protG*4;                  // D10 = C6*4
-  const kcal=pp>0?protK*100/pp:0;       // H2 = D10*100/B10
+  const peso=num(m.peso),fk=num(m.fk)||25,pp=num(m.pp),pg=num(m.pg),pc=num(m.pc),n=Math.max(1,Math.round(num(m.n))||1);
+  const kcal=peso*fk;                   // kcal totales = peso × kcal/kg
+  const protK=kcal*pp/100, protG=protK/4, gpk=peso>0?protG/peso:0;
   const fatK=kcal*pg/100, carbK=kcal*pc/100;   // D11, D12
   const fatG=fatK/9, carbG=carbK/4;     // F11, F12
-  return {peso,gpk,pp,pg,pc,n,protG,protK,kcal,fatK,carbK,fatG,carbG,
+  return {peso,fk,gpk,ok:Math.round(pp+pg+pc)===100,pp,pg,pc,n,protG,protK,kcal,fatK,carbK,fatG,carbG,
     perMeal:{p:protG/n,g:fatG/n,c:carbG/n,k:kcal/n}, sum:pp+pg+pc};
 }
 
@@ -788,15 +791,23 @@ function loadTemplate(ask){
   meals=TEMPLATE_MEALS.map(m=>({...m}));notes=TEMPLATE_NOTES.slice();$('plan-libre').value=TEMPLATE_LIBRE;$('plan-veg').checked=true;
   $('m-n').value=meals.length;renderMeals();renderNotes();updateCalc();if(ask)toast('Plantilla maestra cargada');
 }
-function setMacroInputs(m){setTimeout(syncTypeButtons);$('m-peso').value=m.peso;$('m-gpk').value=m.gpk;['pp','pg','pc'].forEach(k=>{$('m-'+k).value=m[k];$('r-'+k).value=m[k];});$('m-n').value=meals.length||m.n;}
-function readMacro(){return {peso:num($('m-peso').value),gpk:num($('m-gpk').value),pp:num($('m-pp').value),pg:num($('m-pg').value),pc:num($('m-pc').value),n:meals.length||1};}
+function setMacroInputs(m){setTimeout(syncTypeButtons);$('m-peso').value=m.peso;$('m-fk').value=m.fk||25;syncFk();['pp','pg','pc'].forEach(k=>{$('m-'+k).value=m[k];$('r-'+k).value=m[k];});$('m-n').value=meals.length||m.n;}
+function readMacro(){return {peso:num($('m-peso').value),fk:num($('m-fk').value),pp:num($('m-pp').value),pg:num($('m-pg').value),pc:num($('m-pc').value),n:meals.length||1};}
 $('plan-student').addEventListener('change',loadPlan);
 
 function updateCalc(){
   const r=calcMacros(readMacro());
+  const calcCard=$('sum-alert').closest('.calc');calcCard.classList.toggle('calc-blocked',!r.ok);
+  $('sum-alert').classList.toggle('hide',r.ok);
+  if(!r.ok){const diff=100-r.sum;$('sum-alert').innerHTML=`<big>⛔ Los % suman ${fmt(r.sum)}%, no 100%</big>No se calculan calorías hasta corregirlo. ${diff>0?'Faltan '+fmt(diff)+'%':'Sobran '+fmt(-diff)+'%'} — ajusta proteína, grasa o carbohidratos, o elige un tipo de plan.`;}
+  if(!r.ok){['o-kcal','o-pk','o-gk','o-ck','o-kpm','o-pg','o-gg','o-cg'].forEach(id=>$(id).textContent='—');['o-ppm','o-gpm','o-cpm'].forEach(id=>$(id).textContent='Corrige los %');
+    ['d-p','d-g','d-c'].forEach(id=>$(id).setAttribute('stroke-dasharray','0 100'));
+    const s=r.sum||1;$('sb-p').style.width=r.pp/Math.max(100,s)*100+'%';$('sb-g').style.width=r.pg/Math.max(100,s)*100+'%';$('sb-c').style.width=r.pc/Math.max(100,s)*100+'%';
+    $('sum-status').innerHTML='';
+    document.querySelectorAll('[data-target]').forEach(el=>el.innerHTML='<span class="chip warn">⚠ Macros pendientes: los % deben sumar 100</span>');return;}
   $('o-kcal').textContent=fmt(r.kcal);$('o-pk').textContent=fmt(r.protK)+' kcal';$('o-gk').textContent=fmt(r.fatK)+' kcal';$('o-ck').textContent=fmt(r.carbK)+' kcal';
   $('o-kpm').textContent=fmt(r.perMeal.k)+' kcal';
-  $('o-pg').textContent=fmt(r.protG,1)+' g';$('o-gg').textContent=fmt(r.fatG,1)+' g';$('o-cg').textContent=fmt(r.carbG,1)+' g';
+  $('o-pg').textContent=fmt(r.protG,1)+' g';$('o-pk').textContent=fmt(r.protK)+' kcal · '+fmt(r.gpk,1)+' g/kg';$('o-gg').textContent=fmt(r.fatG,1)+' g';$('o-cg').textContent=fmt(r.carbG,1)+' g';
   $('o-ppm').textContent=fmt(r.perMeal.p,1)+' g por comida';$('o-gpm').textContent=fmt(r.perMeal.g,1)+' g por comida';$('o-cpm').textContent=fmt(r.perMeal.c,1)+' g por comida';
   const tot=r.protK+r.fatK+r.carbK||1;let off=0;
   [['d-p',r.protK],['d-g',r.fatK],['d-c',r.carbK]].forEach(([id,v])=>{const pct=v/tot*100;const c=$(id);c.setAttribute('stroke-dasharray',`${pct} ${100-pct}`);c.setAttribute('stroke-dashoffset',`${-off}`);off+=pct;});
@@ -805,7 +816,9 @@ function updateCalc(){
   const le=lastEval($('plan-student').value);$('m-peso-hint').textContent=le?`Peso actual (último control): ${le.peso} kg`:'';
   document.querySelectorAll('[data-target]').forEach(el=>{el.innerHTML=`<span class="chip" style="--c:var(--prot)"><i></i>P ${fmt(r.perMeal.p,0)} g</span><span class="chip" style="--c:var(--fat)"><i></i>G ${fmt(r.perMeal.g,0)} g</span><span class="chip" style="--c:var(--carb)"><i></i>C ${fmt(r.perMeal.c,0)} g</span><span class="chip">≈ ${fmt(r.perMeal.k)} kcal</span>`;});
 }
-['m-peso','m-gpk'].forEach(id=>$(id).addEventListener('input',updateCalc));
+['m-peso','m-fk'].forEach(id=>$(id).addEventListener('input',()=>{syncFk();updateCalc();}));
+function syncFk(){const v=String(num($('m-fk').value));document.querySelectorAll('#fk-btns [data-fk]').forEach(b=>{b.classList.toggle('primary',b.dataset.fk===v);b.classList.toggle('ghost',b.dataset.fk!==v);});}
+$('fk-btns').addEventListener('click',e=>{const b=e.target.closest('[data-fk]');if(!b)return;$('m-fk').value=b.dataset.fk;syncFk();updateCalc();});
 ['pp','pg','pc'].forEach(k=>{
   $('m-'+k).addEventListener('input',()=>{$('r-'+k).value=$('m-'+k).value;syncTypeFromPct();updateCalc();});
   $('r-'+k).addEventListener('input',()=>{$('m-'+k).value=$('r-'+k).value;syncTypeFromPct();updateCalc();});
@@ -871,7 +884,7 @@ $('veg-count').innerHTML=VEG_COUNT.map(v=>`<span>${esc(v)}</span>`).join('');
 
 function savePlan(){
   const sid=$('plan-student').value;if(!sid){toast('Selecciona un alumno');$('plan-student').focus();return;}
-  const macro=readMacro();if(Math.round(macro.pp+macro.pg+macro.pc)!==100&&!confirm('Los porcentajes no suman 100%. ¿Guardar igual?'))return;
+  const macro=readMacro();if(Math.round(macro.pp+macro.pg+macro.pc)!==100){toast('⚠ Los % de macros deben sumar 100% para guardar la pauta');$('sum-alert').scrollIntoView({behavior:'smooth',block:'center'});return;}
   const plan={studentId:sid,kind:$('plan-type').value,nextControl:$('plan-next').value,responsable:$('plan-responsable').value.trim(),
     macro,meals:meals.map(m=>({...m})),notes:notes.map(n=>n.trim()).filter(Boolean),libre:$('plan-libre').value.trim(),veg:$('plan-veg').checked,date:today()};
   state.plans=state.plans.filter(p=>p.studentId!==sid);state.plans.push(plan);persist();
@@ -919,11 +932,12 @@ function renderReport(){
   if(mode==='nutricion'){
     if(!p){$('report-body').innerHTML=basic+'<p>No hay una pauta guardada para este alumno. Créala en Plan Alimentario.</p>';return;}
     const r=calcMacros({...p.macro,n:p.meals.length});const tot=r.protK+r.fatK+r.carbK||1;
+    if(!r.ok){$('report-body').innerHTML=basic+'<p style="color:#b91c1c;font-weight:700">⚠ Esta pauta tiene macros que no suman 100% ('+fmt(r.sum)+'%). Corrígela en Plan Alimentario y vuelve a guardarla.</p>';return;}
     $('report-body').innerHTML=`${basic}
       <h4>Requerimiento diario · ${esc(p.kind||'')}</h4>
       <div class="report-grid four">${kpi('Calorías',fmt(r.kcal),'kcal / día','#8f6b1b')}${kpi('Proteína',fmt(r.protG,0)+' g',fmt(r.pp)+'% · '+fmt(r.protK)+' kcal','#e6a91a')}${kpi('Grasa',fmt(r.fatG,0)+' g',fmt(r.pg)+'% · '+fmt(r.fatK)+' kcal','#ee6b3a')}${kpi('Carbohidratos',fmt(r.carbG,0)+' g',fmt(r.pc)+'% · '+fmt(r.carbK)+' kcal','#1e9fe0')}</div>
       <div class="rbar"><div style="width:${r.protK/tot*100}%;background:#e6a91a"></div><div style="width:${r.fatK/tot*100}%;background:#ee6b3a"></div><div style="width:${r.carbK/tot*100}%;background:#1e9fe0"></div></div>
-      <p style="font-size:11.5px;color:#666;margin:4px 0 0">Base: peso ideal ${fmt(r.peso,1)} kg × ${fmt(r.gpk,1)} g de proteína/kg · ${r.n} comidas al día → por comida: <b>${fmt(r.perMeal.p,0)} g proteína · ${fmt(r.perMeal.g,0)} g grasa · ${fmt(r.perMeal.c,0)} g carbohidratos</b> (≈ ${fmt(r.perMeal.k)} kcal)</p>
+      <p style="font-size:11.5px;color:#666;margin:4px 0 0">Base: ${fmt(r.peso,1)} kg × ${fmt(r.fk)} kcal/kg = ${fmt(r.kcal)} kcal (${fmt(r.gpk,1)} g de proteína/kg) · ${r.n} comidas al día → por comida: <b>${fmt(r.perMeal.p,0)} g proteína · ${fmt(r.perMeal.g,0)} g grasa · ${fmt(r.perMeal.c,0)} g carbohidratos</b> (≈ ${fmt(r.perMeal.k)} kcal)</p>
       <h4>Plan de alimentación</h4>
       <table><thead><tr><th style="width:24%">Comida</th><th>Alimentos</th><th style="width:26%">Suplementación</th></tr></thead><tbody>
       ${p.meals.map(m=>`<tr><td><b>${esc(m.name)}</b>${m.time?'<br><span style="color:#8f6b1b;font-weight:700">'+esc(m.time)+'</span>':''}</td><td>${esc(m.food||'—')}</td><td>${esc(m.supp||'—')}</td></tr>`).join('')}
