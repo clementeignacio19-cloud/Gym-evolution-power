@@ -3213,8 +3213,8 @@ const DEFAULT_CONSENT=`DECLARACIÓN Y CONSENTIMIENTO
 Yo, {alumno}, RUT {rut}, declaro que la información proporcionada es verdadera y autorizo a {gimnasio} a utilizar mis datos únicamente para fines administrativos y de contacto.
 
 Asimismo, entiendo que la práctica de actividad física implica riesgo y asumo la responsabilidad de participar de acuerdo con mi estado de salud.`;
-const GYM_DEFAULT={nombre:'Evolution Power',rut:'',responsable:'',direccion:'Laguna Verde, Valparaíso',telefono:'',correo:'',texto:DEFAULT_CONSENT};
-function gym(){const g={...GYM_DEFAULT,...(state.config.gym||{})};if(!g.texto||g.texto===OLD_CONSENT)g.texto=DEFAULT_CONSENT;return g;}
+const GYM_DEFAULT={nombre:'Evolution Power',rut:'',responsable:'Kelvin Garcia',direccion:'Laguna Verde, Valparaíso',telefono:'',correo:'',texto:DEFAULT_CONSENT};
+function gym(){const g={...GYM_DEFAULT,...(state.config.gym||{})};if(!g.responsable)g.responsable=GYM_DEFAULT.responsable;if(!g.texto||g.texto===OLD_CONSENT)g.texto=DEFAULT_CONSENT;return g;}
 let REPO_SIG=null;
 async function loadRepoSig(){try{const r=await fetch('firma-gimnasio.png',{cache:'no-cache'});if(!r.ok)return;const b=await r.blob();REPO_SIG=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(b);});renderGymSig();renderConsentPanel();}catch(e){}}
 function gymSigURL(){return state.config.gymSig||REPO_SIG||'';}
