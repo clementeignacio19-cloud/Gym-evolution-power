@@ -294,7 +294,11 @@ td{font-size:13px;color:#edf1f5}
 .rbar{display:flex;height:12px;border-radius:99px;overflow:hidden;margin:6px 0 4px}
 .pdf-mode{max-width:none!important;width:100%!important;border:0!important;border-radius:0!important;padding:0!important;margin:0!important;box-shadow:none!important}
 .pdf-mode .report-header{flex-direction:row!important}.pdf-mode .report-header>div:last-child{text-align:right!important}
+.pdf-mode h4{margin:14px 0 7px!important;font-size:14.5px!important}.pdf-mode .report-box{padding:8px 11px!important;font-size:12px!important}.pdf-mode .report-grid{gap:7px!important;margin-bottom:8px!important}.pdf-mode th,.pdf-mode td{padding:7px 8px!important}.pdf-mode .report-header{padding-bottom:12px!important;margin-bottom:12px!important}.pdf-mode .doc-sec{margin:16px 0 2px!important}.pdf-mode .report-box.kpi strong{font-size:19px!important}
 .pdf-mode .report-grid{grid-template-columns:repeat(2,1fr)!important}.pdf-mode .report-grid.three{grid-template-columns:repeat(3,1fr)!important}.pdf-mode .report-grid.four{grid-template-columns:repeat(4,1fr)!important}
+.doc-sec{display:flex;align-items:center;gap:10px;margin:26px 0 4px;padding:10px 14px;border-radius:12px;background:#111;color:#fff;font-weight:800;font-size:15px;break-after:avoid}
+.doc-sec span{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#ffde8a,#d5b25f);color:#111;display:grid;place-items:center;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .print-note{margin-top:24px;padding-top:18px;border-top:1px dashed #ccc;color:#555;font-size:11px}
 .toast{position:fixed;right:20px;bottom:20px;background:#101113;color:#fff;padding:12px 16px;border:1px solid #3a3427;border-radius:14px;box-shadow:var(--shadow);z-index:1000;max-width:360px;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}
 .toast.show{opacity:1;transform:none;pointer-events:auto}
@@ -620,14 +624,15 @@ td{font-size:13px;color:#edf1f5}
       <div class="card no-print" style="margin-bottom:18px">
         <div class="rowhead">
           <div><h3>Informe listo para PDF</h3><p class="desc" style="margin:0">Selecciona alumno y documento, y presiona “Descargar PDF”.</p></div>
-          <div class="actions"><button class="btn secondary sm" onclick="exportCSV('alumnos')">CSV alumnos</button><button class="btn secondary sm" onclick="exportCSV('evaluaciones')">CSV evaluaciones</button><button class="btn primary" id="pdf-btn" onclick="downloadPDF()">⬇️ Descargar PDF</button><button class="btn ghost sm" onclick="printCurrentReport()" title="Imprimir">🖨️</button></div>
+          <div class="actions"><button class="btn secondary sm" onclick="exportCSV('alumnos')">CSV alumnos</button><button class="btn secondary sm" onclick="exportCSV('evaluaciones')">CSV evaluaciones</button><button class="btn primary" id="pdf-btn" onclick="downloadPDF()">⬇️ Descargar PDF</button></div>
         </div>
         <div class="fieldgrid">
           <div class="field"><label>Alumno</label><select id="report-student"></select></div>
-          <div class="field"><label>Documento</label><select id="report-mode"><option value="evaluacion">Evaluación completa</option><option value="nutricion">Pauta nutricional</option><option value="entrenamiento">Plan semanal de entrenamiento</option></select></div>
+          <div class="field"><label>Documento</label><select id="report-mode"><option value="evaluacion">Evaluación completa</option><option value="nutricion">Pauta nutricional</option><option value="entrenamiento">Plan semanal de entrenamiento</option><option value="completa">📚 Ficha completa (todo junto)</option></select></div>
           <div class="field" id="report-eval-container"><label>Evaluación</label><select id="report-eval"></select></div>
         </div>
-        <p class="small-note">El PDF se descarga directo a tu equipo o celular. 🖨️ abre la impresión si prefieres imprimir.</p>
+        <div class="pdf-quick" id="pdf-quick"></div>
+        <p class="small-note">Los documentos se descargan directo como archivo PDF en tu computador o celular (carpeta Descargas).</p>
       </div>
       <div class="report-wrap" id="report-content">
         <div class="report-header">
@@ -708,7 +713,7 @@ function go(view){
   VIEWS.forEach(([v])=>$('view-'+v).classList.toggle('hide',v!==view));
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
   $('page-title').textContent=titles[view][0];$('page-sub').textContent=titles[view][1];
-  if(view==='informe')drawReport();
+  if(view==='informe'){drawReport();renderQuick();}
   if(view==='plan'&&!planLoadedFor)loadPlan();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -813,7 +818,8 @@ function openFicha(id){
       ${ev.length?ev.map((e,i)=>{const prev=ev[i+1];return `<div class="hist-row"><span><b>${fdate(e.fecha)}</b> · <span style="color:#9aa1ab">${esc(e.meta)}</span>${i===ev.length-1?' <span class="tag gold">Inicial</span>':''}<br><span style="color:#9aa1ab;font-size:12px">${esc(e.peso)} kg · ${esc(e.altura)} cm${e.cintura?' · cintura '+esc(e.cintura)+' cm':''}</span></span><span style="white-space:nowrap">${deltaHTML(prev?num(e.peso)-num(prev.peso):null)} <button class="btn sm ghost icon" type="button" onclick="editEval('${esc(e.id)}')" title="Editar">✏️</button><button class="btn sm danger icon" type="button" onclick="delEval('${esc(e.id)}')" title="Eliminar">🗑</button></span></div>`;}).join(''):'<div class="empty">Sin evaluaciones.</div>'}</div>
     <div class="fsec"><div class="fsec-head"><h4>🥗 Ficha nutricional</h4><div class="actions"><button class="btn sm primary" type="button" onclick="closeModal();$('plan-student').value='${esc(id)}';loadPlan();go('plan')">${p?'✏️ Editar pauta':'+ Crear pauta'}</button>${p?`<button class="btn sm danger" type="button" onclick="delPlanOf('${esc(id)}')">🗑</button>`:''}</div></div>${planHTML}</div>
     <div class="fsec"><div class="fsec-head"><h4>🏋️ Ficha de entrenamiento</h4><div class="actions"><button class="btn sm primary" type="button" onclick="closeModal();$('workout-student').value='${esc(id)}';loadWorkout();go('entrenamiento')">${w?'✏️ Editar rutina':'+ Crear rutina'}</button>${w?`<button class="btn sm danger" type="button" onclick="delWorkoutOf('${esc(id)}')">🗑</button>`:''}</div></div>${workHTML}</div>
-    <div class="actions" style="justify-content:space-between"><button class="btn sm secondary" type="button" onclick="closeModal();$('report-student').value='${esc(id)}';go('informe')">🧾 Ver informes PDF</button><button class="btn sm danger" type="button" onclick="closeModal();deleteStudent('${esc(id)}')">🗑 Eliminar alumno</button></div>`);
+    <div class="fsec"><div class="fsec-head"><h4>⬇️ Descargar en PDF</h4></div><div class="actions">${quickBtns(id)}</div></div>
+    <div class="actions" style="justify-content:space-between"><button class="btn sm secondary" type="button" onclick="closeModal();$('report-student').value='${esc(id)}';go('informe')">🧾 Ver informes</button><button class="btn sm danger" type="button" onclick="closeModal();deleteStudent('${esc(id)}')">🗑 Eliminar alumno</button></div>`);
   fichaOpenFor=id;
 }
 function delPlanOf(id){if(!confirm('¿Eliminar la pauta nutricional de este alumno?'))return;state.plans=state.plans.filter(x=>x.studentId!==id);if($('plan-student').value===id)planLoadedFor=null;persist();openFicha(id);toast('Pauta eliminada');}
@@ -1153,7 +1159,12 @@ function saveWorkout(){
 }
 
 /* ================= INFORMES ================= */
-$('report-student').addEventListener('change',drawReport);$('report-mode').addEventListener('change',renderReport);$('report-eval').addEventListener('change',renderReport);
+$('report-student').addEventListener('change',()=>{drawReport();renderQuick();});$('report-mode').addEventListener('change',renderReport);$('report-eval').addEventListener('change',renderReport);
+function quickBtns(sid,size){
+  return [['evaluacion','📋 Evaluación'],['nutricion','🥗 Nutrición'],['entrenamiento','🏋️ Entrenamiento'],['completa','📚 Todo junto']].map(([m,l])=>{const ok=sid&&docAvailable(sid,m);
+    return `<button class="btn ${m==='completa'?'primary':'secondary'} ${size||'sm'}" type="button" ${ok?'':'disabled title="Sin datos guardados"'} onclick="downloadPDF('${esc(sid)}','${m}',undefined,this)">⬇️ ${l}</button>`;}).join('');
+}
+function renderQuick(){const sid=$('report-student').value;$('pdf-quick').innerHTML=sid?`<div class="field" style="margin-top:14px"><label>Descarga rápida en PDF</label><div class="actions">${quickBtns(sid)}</div></div>`:'';}
 function drawReport(){
   const sid=$('report-student').value,ev=evalsOf(sid).slice().reverse(),sel=$('report-eval'),old=sel.value;
   sel.innerHTML=ev.length?ev.map(e=>'<option value="'+esc(e.id)+'">'+fdate(e.fecha)+' · '+esc(e.meta)+'</option>').join(''):'<option value="">Sin evaluaciones</option>';
@@ -1165,23 +1176,23 @@ function healthFlags(s){const f=[];if(has(s.condicion))f.push('🩺 Condición m
 function waterRange(kg){return kg>0?{min:kg*.03,max:kg*.035}:null;}
 const box=(k,v)=>`<div class="report-box"><b>${esc(k)}</b>${esc(v??'—')}</div>`;
 const kpi=(k,v,s,c)=>`<div class="report-box kpi"${c?` style="border-top:4px solid ${c}"`:''}><small>${esc(k)}</small><strong>${v}</strong><small>${esc(s||'')}</small></div>`;
-function renderReport(){
-  const sid=$('report-student').value,mode=$('report-mode').value,s=state.students.find(x=>x.id===sid);
-  const e=state.evals.find(x=>x.id===$('report-eval').value&&x.studentId===sid);
+function buildDoc(sid,mode,evalId,withBasic=true){
+  const R={heading:'',date:'',body:''},s=state.students.find(x=>x.id===sid);
+  const e=state.evals.find(x=>x.id===evalId&&x.studentId===sid)||(!evalId?lastEval(sid):null);
   const p=normPlan(state.plans.find(x=>x.studentId===sid)),w=state.workouts.find(x=>x.studentId===sid);
-  $('report-eval-container').classList.toggle('hide',mode!=='evaluacion');
-  $('report-heading').textContent=mode==='nutricion'?'Pauta de alimentación':mode==='entrenamiento'?'Plan semanal de entrenamiento':'Evaluación física y nutricional';
-  $('report-date').textContent=fdate(mode==='entrenamiento'?w?.start:mode==='nutricion'?p?.date:e?.fecha);
-  if(!s){$('report-body').innerHTML='<p>Selecciona un alumno para mostrar su documento.</p>';return;}
-  const basic=`<h4>Datos del alumno</h4><div class="report-grid">${box('Alumno',s.nombre)}${box('Objetivo',s.objetivo)}${box('Frecuencia de entrenamiento',s.frecuencia)}${box('Edad',s.edad?s.edad+' años':'No registrada')}</div>`
+  R.heading=mode==='nutricion'?'Pauta de alimentación':mode==='entrenamiento'?'Plan semanal de entrenamiento':'Evaluación física y nutricional';
+  R.date=fdate(mode==='entrenamiento'?w?.start:mode==='nutricion'?p?.date:e?.fecha);
+  if(!s){R.body='<p>Selecciona un alumno para mostrar su documento.</p>';return R;}
+  const basic=!withBasic?'':`<h4>Datos del alumno</h4><div class="report-grid">${box('Alumno',s.nombre)}${box('Objetivo',s.objetivo)}${box('Frecuencia de entrenamiento',s.frecuencia)}${box('Edad',s.edad?s.edad+' años':'No registrada')}</div>`
     +`<h4>Antecedentes de salud</h4><div class="report-grid three">${box('Enfermedad / condición médica',s.condicion||'No informada')}${box('Medicamentos actuales',s.medicamentos||'No informados')}${box('Limitaciones físicas',s.limitaciones||'No informadas')}</div>`;
+  if(mode==='__none'){R.body=basic;return R;}
   const follow=(d,r)=>`<h4>Próximo seguimiento</h4><div class="report-grid">${box('Fecha próximo control',d?fdate(d):'Por definir')}${box('Responsable',r||'Por definir')}</div>`;
 
   if(mode==='nutricion'){
-    if(!p){$('report-body').innerHTML=basic+'<p>No hay una pauta guardada para este alumno. Créala en Plan Alimentario.</p>';return;}
+    if(!p){R.body=basic+'<p>No hay una pauta guardada para este alumno. Créala en Plan Alimentario.</p>';return R;}
     const r=calcMacros({...p.macro,n:p.meals.length});const tot=r.protK+r.fatK+r.carbK||1;
-    if(!r.ok){$('report-body').innerHTML=basic+'<p style="color:#b91c1c;font-weight:700">⚠ Esta pauta tiene macros que no suman 100% ('+fmt(r.sum)+'%). Corrígela en Plan Alimentario y vuelve a guardarla.</p>';return;}
-    $('report-body').innerHTML=`${basic}
+    if(!r.ok){R.body=basic+'<p style="color:#b91c1c;font-weight:700">⚠ Esta pauta tiene macros que no suman 100% ('+fmt(r.sum)+'%). Corrígela en Plan Alimentario y vuelve a guardarla.</p>';return R;}
+    R.body=`${basic}
       <h4>Requerimiento diario · ${esc(p.kind||'')}</h4>
       <div class="report-grid four">${kpi('Calorías',fmt(r.kcal),'kcal / día','#8f6b1b')}${kpi('Proteína',fmt(r.protG,0)+' g',fmt(r.pp)+'% · '+fmt(r.protK)+' kcal','#e6a91a')}${kpi('Grasa',fmt(r.fatG,0)+' g',fmt(r.pg)+'% · '+fmt(r.fatK)+' kcal','#ee6b3a')}${kpi('Carbohidratos',fmt(r.carbG,0)+' g',fmt(r.pc)+'% · '+fmt(r.carbK)+' kcal','#1e9fe0')}</div>
       <div class="rbar"><div style="width:${r.protK/tot*100}%;background:#e6a91a"></div><div style="width:${r.fatK/tot*100}%;background:#ee6b3a"></div><div style="width:${r.carbK/tot*100}%;background:#1e9fe0"></div></div>
@@ -1194,32 +1205,52 @@ function renderReport(){
       ${p.notes.length?`<h4>Indicaciones</h4><ul>${p.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:''}
       ${p.veg?`<h4>Guía de verduras</h4><div class="report-grid"><div class="report-box" style="white-space:normal"><b style="color:#15803d">✓ Priorizar · consumo libre diario</b><div class="rchips">${(p.vegFree||VEG_FREE).map(v=>`<span>${esc(v)}</span>`).join('')}</div></div><div class="report-box" style="white-space:normal"><b style="color:#8f6b1b">⚖ Contabilizar · cantidad según dieta</b><div class="rchips">${(p.vegCount||VEG_COUNT).map(v=>`<span>${esc(v)}</span>`).join('')}</div></div></div>`:''}
       ${follow(p.nextControl,p.responsable)}`;
-    return;
+    return R;
   }
   if(mode==='entrenamiento'){
-    if(!w){$('report-body').innerHTML=basic+'<p>No hay un plan de entrenamiento guardado. Créalo en Entrenamiento semanal.</p>';return;}
+    if(!w){R.body=basic+'<p>No hay un plan de entrenamiento guardado. Créalo en Entrenamiento semanal.</p>';return R;}
     const days=DAYS.map(([k,l])=>{const d=w.days?.[k]||{};return `<tr><td><b>${l}</b></td><td><b>${esc(d.type||'Descanso / sin indicar')}</b></td><td>${esc(d.detail||'—')}</td></tr>`;}).join('');
-    $('report-body').innerHTML=`${basic}<div class="report-grid">${box('Objetivo de la rutina',w.goal||'Por definir')}${box('Semana desde',w.start?fdate(w.start):'Por definir')}</div>
+    R.body=`${basic}<div class="report-grid">${box('Objetivo de la rutina',w.goal||'Por definir')}${box('Semana desde',w.start?fdate(w.start):'Por definir')}</div>
       <h4>Rutina de lunes a domingo</h4><table><thead><tr><th style="width:14%">Día</th><th style="width:24%">Sesión</th><th>Ejercicios · series · repeticiones</th></tr></thead><tbody>${days}</tbody></table>
       <h4>Indicaciones generales</h4><p style="white-space:pre-wrap;font-size:13px">${esc(w.notes||'Sin observaciones adicionales.')}</p>${follow(w.nextControl,w.responsable)}`;
-    return;
+    return R;
   }
-  if(!e){$('report-body').innerHTML=basic+'<p>Aún no hay una evaluación guardada para este alumno.</p>';return;}
+  if(!e){R.body=basic+'<p>Aún no hay una evaluación guardada para este alumno.</p>';return R;}
   const kg=num(e.peso),h=num(e.altura),adult=!s.edad||num(s.edad)>=18;
   const bmi=adult&&kg>0&&h>0?kg/((h/100)**2):NaN;const c=num(e.cintura);const whtr=c>0&&h>0?c/h:NaN;
   const hist=evalsOf(sid).filter(x=>String(x.fecha)<=String(e.fecha));const prev=hist.length>1?hist[hist.length-2]:null;
-  $('report-body').innerHTML=`${basic}<h4>Evaluación · ${esc(e.meta||'')}</h4>
+  R.body=`${basic}<h4>Evaluación · ${esc(e.meta||'')}</h4>
     <div class="report-grid four">${kpi('Peso',fmt(kg,1)+' kg',prev?((kg-num(prev.peso))>=0?'+':'')+fmt(kg-num(prev.peso),1)+' kg vs anterior':'Control inicial')}${kpi('IMC',Number.isFinite(bmi)?fmt(bmi,1):'N/A',Number.isFinite(bmi)?bmiCat(bmi):'')}${kpi('Agua sugerida',fmt(kg*.03,1)+'–'+fmt(kg*.035,1)+' L','30–35 ml/kg')}${kpi('Cintura/estatura',Number.isFinite(whtr)?fmt(whtr,2):'—',Number.isFinite(whtr)?(whtr<.5?'Bajo 0,5':'Sobre 0,5'):'')}</div>
     <div class="report-grid three">${box('Estatura',e.altura+' cm')}${box('Cintura',e.cintura?e.cintura+' cm':'No registrada')}${box('Agua declarada',e.aguaReal?e.aguaReal+' L/día':'No registrada')}${box('Creatina',e.creatina)}${box('Sueño',e.sueno)}${box('Comidas diarias',e.comidas)}</div>
     ${hist.length>1?`<h4>Historial de peso</h4><table><thead><tr><th>Fecha</th><th>Control</th><th>Peso</th><th>Variación</th></tr></thead><tbody>${hist.map((x,i)=>`<tr><td>${fdate(x.fecha)}</td><td>${esc(x.meta)}</td><td>${esc(x.peso)} kg</td><td>${i?((num(x.peso)-num(hist[i-1].peso))>=0?'+':'')+fmt(num(x.peso)-num(hist[i-1].peso),1)+' kg':'—'}</td></tr>`).join('')}</tbody></table>`:''}
     <h4>Observaciones</h4><p style="white-space:pre-wrap;font-size:13px">${esc(e.notas||'Sin observaciones registradas.')}</p>${follow(e.proximoControl,e.responsable)}`;
+  return R;
 }
-function reportReady(){
-  const mode=$('report-mode').value,sid=$('report-student').value;if(!sid){toast('Selecciona un alumno');return null;}
-  const has=mode==='nutricion'?state.plans.some(p=>p.studentId===sid):mode==='entrenamiento'?state.workouts.some(w=>w.studentId===sid):state.evals.some(e=>e.studentId===sid);
-  if(!has){toast('Primero guarda el documento para ese alumno');return null;}
-  const s=state.students.find(x=>x.id===sid);
-  return 'Evolution Power - '+({evaluacion:'Evaluacion',nutricion:'Pauta',entrenamiento:'Rutina'}[mode])+' - '+(s?.nombre||'alumno');
+
+function buildComplete(sid,evalId){
+  const s=state.students.find(x=>x.id===sid);if(!s)return {heading:'Ficha completa del alumno',date:'',body:'<p>Selecciona un alumno.</p>'};
+  const head=buildDoc(sid,'evaluacion',evalId,true);
+  const basicOnly=buildDoc(sid,'__none',null,true).body;
+  const sec=(n,t)=>`<div class="doc-sec"><span>${n}</span>${t}</div>`;
+  const ev=buildDoc(sid,'evaluacion',evalId,false),nu=buildDoc(sid,'nutricion',null,false),en=buildDoc(sid,'entrenamiento',null,false);
+  return {heading:'Ficha completa del alumno',date:fdate(today()),
+    body:basicOnly+sec('1','Evaluación física y nutricional')+ev.body
+      +'<div class="html2pdf__page-break"></div>'+sec('2','Pauta de alimentación')+nu.body
+      +'<div class="html2pdf__page-break"></div>'+sec('3','Plan semanal de entrenamiento')+en.body};
+}
+function docFor(sid,mode,evalId){return mode==='completa'?buildComplete(sid,evalId):buildDoc(sid,mode,evalId);}
+function renderReport(){
+  const sid=$('report-student').value,mode=$('report-mode').value;
+  $('report-eval-container').classList.toggle('hide',mode!=='evaluacion'&&mode!=='completa');
+  const D=docFor(sid,mode,$('report-eval').value||null);
+  $('report-heading').textContent=D.heading;$('report-date').textContent=D.date||'—';$('report-body').innerHTML=D.body;
+}
+const DOC_NAMES={evaluacion:'Evaluacion',nutricion:'Pauta nutricional',entrenamiento:'Rutina',completa:'Ficha completa'};
+function docAvailable(sid,mode){
+  if(mode==='nutricion')return state.plans.some(p=>p.studentId===sid);
+  if(mode==='entrenamiento')return state.workouts.some(w=>w.studentId===sid);
+  if(mode==='evaluacion')return state.evals.some(e=>e.studentId===sid);
+  return docAvailable(sid,'evaluacion')||docAvailable(sid,'nutricion')||docAvailable(sid,'entrenamiento');
 }
 function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s);});}
 async function ensurePdfLib(){
@@ -1229,30 +1260,32 @@ async function ensurePdfLib(){
   }
   return false;
 }
-async function downloadPDF(){
-  const name=reportReady();if(!name)return;
-  const btn=$('pdf-btn'),label=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Generando PDF…';
+let pdfBusy=false;
+async function downloadPDF(sid,mode,evalId,btn){
+  sid=sid||$('report-student').value;mode=mode||$('report-mode').value;
+  if(evalId===undefined)evalId=(mode==='evaluacion'||mode==='completa')&&sid===$('report-student').value?($('report-eval').value||null):null;
+  if(!sid){toast('Selecciona un alumno');return;}
+  if(!docAvailable(sid,mode)){toast('Este alumno aún no tiene '+({evaluacion:'evaluaciones',nutricion:'pauta nutricional',entrenamiento:'rutina',completa:'datos guardados'}[mode]));return;}
+  if(pdfBusy)return;pdfBusy=true;
+  btn=btn||$('pdf-btn');const label=btn?btn.innerHTML:'';if(btn){btn.disabled=true;btn.innerHTML='⏳ Generando…';}
   try{
-    if(!(await ensurePdfLib())){toast('No se pudo cargar el generador de PDF. Se abrirá la impresión.');printCurrentReport();return;}
+    if(!(await ensurePdfLib())){toast('⚠ No se pudo cargar el generador de PDF. Revisa tu conexión a internet e inténtalo otra vez.');return;}
+    const s=state.students.find(x=>x.id===sid),D=docFor(sid,mode,evalId);
     const node=$('report-content').cloneNode(true);node.removeAttribute('id');node.classList.add('pdf-mode');
+    node.querySelector('#report-heading').textContent=D.heading;node.querySelector('#report-date').textContent=D.date||'—';node.querySelector('#report-body').innerHTML=D.body;
+    node.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+    const name=('Evolution Power - '+DOC_NAMES[mode]+' - '+(s?.nombre||'alumno')).replace(/[\\/:*?"<>|]/g,'');
     const sx=window.scrollX,sy=window.scrollY;window.scrollTo(0,0);
     await html2pdf().set({
-      margin:[10,10,12,10],filename:name.replace(/[\\/:*?"<>|]/g,'')+'.pdf',
+      margin:[10,10,12,10],filename:name+'.pdf',
       image:{type:'jpeg',quality:0.96},
       html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['css','legacy'],avoid:['tr','.report-box','.report-grid','h4','.rbar']}
+      pagebreak:{mode:['css','legacy'],avoid:['tr','.report-box','.report-grid','h4','.rbar','.doc-sec']}
     }).from(node).save();
-    window.scrollTo(sx,sy);toast('✅ PDF descargado');
-  }catch(e){console.error(e);toast('Error al generar el PDF. Intenta con 🖨️ Imprimir.');}
-  finally{btn.disabled=false;btn.innerHTML=label;}
-}
-function printCurrentReport(){
-  const mode=$('report-mode').value,sid=$('report-student').value;if(!sid){toast('Selecciona un alumno');return;}
-  const has=mode==='nutricion'?state.plans.some(p=>p.studentId===sid):mode==='entrenamiento'?state.workouts.some(w=>w.studentId===sid):state.evals.some(e=>e.studentId===sid);
-  if(!has){toast('Primero guarda el documento para ese alumno');return;}
-  const s=state.students.find(x=>x.id===sid),t=document.title;document.title='Evolution Power - '+({evaluacion:'Evaluacion',nutricion:'Pauta',entrenamiento:'Rutina'}[mode])+' - '+(s?.nombre||'');
-  window.print();setTimeout(()=>document.title=t,800);
+    window.scrollTo(sx,sy);toast('✅ PDF descargado: '+name+'.pdf');
+  }catch(err){console.error(err);toast('⚠ Error al generar el PDF. Inténtalo otra vez.');}
+  finally{pdfBusy=false;if(btn){btn.disabled=false;btn.innerHTML=label;}}
 }
 
 /* ================= EXPORT / BACKUP ================= */
