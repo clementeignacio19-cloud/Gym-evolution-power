@@ -194,6 +194,13 @@ td{font-size:13px;color:#edf1f5}
 .mrow.same .mopt{grid-column:2/4;cursor:default}
 .editing-banner{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:14px;margin-bottom:14px;background:rgba(79,195,255,.09);border:1px solid rgba(79,195,255,.35);color:#bfe9ff;font-weight:700;font-size:13px}
 @media(max-width:720px){.modal{padding:0}.modal-box{border-radius:0;min-height:100%;padding:16px 14px calc(90px + env(safe-area-inset-bottom))}.kv{grid-template-columns:1fr 1fr}.mrow{grid-template-columns:1fr}.mrow>b{padding-top:2px}.mrow.same .mopt{grid-column:auto}}
+.gsig-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.gsig-prev{width:240px;height:90px;border-radius:12px;background:#fff;display:grid;place-items:center;color:#999;font-size:12px;overflow:hidden}
+.gsig-prev img{max-width:92%;max-height:82px}
+.sig-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.sig-pair>div{background:#fff;border-radius:12px;padding:8px 10px;color:#111;font-size:11.5px;min-height:110px;display:flex;flex-direction:column;justify-content:flex-end}
+.sig-pair img{max-width:100%;max-height:70px;object-fit:contain;align-self:center}
+.sig-pair .ln{border-top:1px solid #333;padding-top:3px;margin-top:2px}
 .consent-panel{margin-top:18px;padding:16px;border-radius:18px;border:1px solid #3a3427;background:linear-gradient(180deg,#121110,#0c0c0d)}
 .consent-text{max-height:220px;overflow:auto;white-space:pre-wrap;font-size:12.5px;line-height:1.55;color:#d9dce2;background:#0b0c0e;border:1px solid #24262b;border-radius:13px;padding:12px 14px}
 .consent-check{display:block;margin-top:10px}
@@ -496,8 +503,13 @@ td{font-size:13px;color:#edf1f5}
           <div class="field"><label>Teléfono / WhatsApp</label><input data-gym="telefono" placeholder="+56 9 ..."></div>
           <div class="field"><label>Correo del gimnasio (recibe las firmas)</label><input data-gym="correo" type="email"></div>
           <div class="field full"><label>Texto del consentimiento</label><textarea data-gym="texto" style="min-height:280px"></textarea>
-            <span class="hint">Puedes usar: {alumno} {rut} {edad} {gimnasio} {responsable} {direccion} {fecha} {condicion} {medicamentos} {limitaciones}</span></div>
+            <span class="hint">Puedes usar: {alumno} {rut} {edad} {gimnasio} {responsable} {direccion} {registro} {condicion} {medicamentos} {limitaciones}. La fecha de registro, la fecha de firma y las firmas se agregan solas al final.</span></div>
         </div>
+        <div class="field" style="margin-top:14px"><label>Firma del dueño / representante del gimnasio</label>
+          <div class="gsig-row"><div class="gsig-prev" id="gsig-prev"></div>
+            <div class="actions"><button class="btn sm secondary" type="button" onclick="$('gsig-file').click()">📷 Subir foto de la firma</button><button class="btn sm danger" type="button" id="gsig-del" onclick="delGymSig()">Quitar</button></div></div>
+          <input type="file" id="gsig-file" accept="image/*" class="hide">
+          <span class="hint">Foto de la firma en papel blanco con lápiz oscuro. El fondo se elimina solo y aparece en todos los consentimientos.</span></div>
         <div class="actions" style="margin-top:12px"><button class="btn sm primary" type="button" onclick="saveGym()">Guardar datos del gimnasio</button><button class="btn sm ghost" type="button" onclick="resetConsentText()">↺ Texto predeterminado</button></div>
         <div class="notice">El texto predeterminado es una base general. Es recomendable que lo revise un abogado antes de usarlo.</div>
       </details>
@@ -3138,7 +3150,7 @@ function undoDelete(){
 $('student-form').addEventListener('submit',e=>{
   e.preventDefault();const d=Object.fromEntries(new FormData(e.target).entries());d.nombre=(d.nombre||'').trim();if(!d.nombre)return;
   if(d.id){const i=state.students.findIndex(x=>x.id===d.id);if(i>-1)state.students[i]={...state.students[i],...d};toast('Alumno actualizado');}
-  else{d.id=uid();state.students.push(d);toast('Alumno guardado correctamente');}
+  else{d.id=uid();d.fechaRegistro=today();state.students.push(d);toast('Alumno guardado correctamente');}
   persist();resetStudentForm();renderDupBanner();
 });
 
@@ -3173,7 +3185,7 @@ function delPlanOf(id){if(!confirm('¿Eliminar la pauta nutricional de este alum
 function delWorkoutOf(id){if(!confirm('¿Eliminar la rutina de este alumno?'))return;state.workouts=state.workouts.filter(x=>x.studentId!==id);persist();openFicha(id);toast('Rutina eliminada');}
 
 /* ================= CONSENTIMIENTO + FIRMA ================= */
-const DEFAULT_CONSENT=`CONSENTIMIENTO INFORMADO Y DECLARACIÓN DE SALUD
+const OLD_CONSENT=`CONSENTIMIENTO INFORMADO Y DECLARACIÓN DE SALUD
 
 Yo, {alumno}, RUT {rut}, de {edad} años, declaro que me inscribo de forma libre y voluntaria en {gimnasio}, ubicado en {direccion}, para participar en sus programas de entrenamiento físico, evaluaciones y orientación de hábitos alimentarios, a cargo de {responsable}.
 
@@ -3196,13 +3208,44 @@ Me comprometo a informar cualquier cambio en mi estado de salud, embarazo, lesi�
 Declaro haber leído y comprendido este documento, y lo firmo en señal de aceptación.
 
 Fecha: {fecha}`;
+const DEFAULT_CONSENT=`DECLARACIÓN Y CONSENTIMIENTO
+
+Yo, {alumno}, RUT {rut}, declaro que la información proporcionada es verdadera y autorizo a {gimnasio} a utilizar mis datos únicamente para fines administrativos y de contacto.
+
+Asimismo, entiendo que la práctica de actividad física implica riesgo y asumo la responsabilidad de participar de acuerdo con mi estado de salud.`;
 const GYM_DEFAULT={nombre:'Evolution Power',rut:'',responsable:'',direccion:'Laguna Verde, Valparaíso',telefono:'',correo:'',texto:DEFAULT_CONSENT};
-function gym(){return {...GYM_DEFAULT,...(state.config.gym||{})};}
-function loadGymForm(){const g=gym();document.querySelectorAll('[data-gym]').forEach(i=>i.value=g[i.dataset.gym]||'');}
+function gym(){const g={...GYM_DEFAULT,...(state.config.gym||{})};if(!g.texto||g.texto===OLD_CONSENT)g.texto=DEFAULT_CONSENT;return g;}
+let REPO_SIG=null;
+async function loadRepoSig(){try{const r=await fetch('firma-gimnasio.png',{cache:'no-cache'});if(!r.ok)return;const b=await r.blob();REPO_SIG=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(b);});renderGymSig();renderConsentPanel();}catch(e){}}
+function gymSigURL(){return state.config.gymSig||REPO_SIG||'';}
+function renderGymSig(){const u=gymSigURL();if(!$('gsig-prev'))return;$('gsig-prev').innerHTML=u?`<img src="${u}" alt="Firma gimnasio">`:'Sin firma cargada';$('gsig-del').classList.toggle('hide',!state.config.gymSig);}
+function cleanSignatureImage(file){return new Promise((ok,ko)=>{const img=new Image();img.onload=()=>{
+  const maxW=900,sc=Math.min(1,maxW/img.width),w=Math.round(img.width*sc),h=Math.round(img.height*sc);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(img,0,0,w,h);
+  const d=x.getImageData(0,0,w,h),px=d.data;let lum=[],sum=0;
+  for(let i=0;i<px.length;i+=4){const l=.299*px[i]+.587*px[i+1]+.114*px[i+2];lum.push(l);sum+=l;}
+  const avg=sum/lum.length,thr=Math.min(avg-35,175);let x0=w,y0=h,x1=0,y1=0;
+  for(let k=0;k<lum.length;k++){const l=lum[k],i=k*4;const a=l<thr?Math.min(255,Math.round((thr-l)/thr*255*2.2)):0;
+    px[i]=15;px[i+1]=27;px[i+2]=62;px[i+3]=a;if(a>60){const X=k%w,Y=(k/w)|0;if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;}}
+  x.putImageData(d,0,0);if(x1<=x0||y1<=y0){ko('vacía');return;}
+  const pad=10;x0=Math.max(0,x0-pad);y0=Math.max(0,y0-pad);x1=Math.min(w,x1+pad);y1=Math.min(h,y1+pad);
+  const o=document.createElement('canvas');const cw=x1-x0,ch=y1-y0,s2=Math.min(1,600/cw);o.width=Math.round(cw*s2);o.height=Math.round(ch*s2);
+  o.getContext('2d').drawImage(c,x0,y0,cw,ch,0,0,o.width,o.height);ok(o.toDataURL('image/png'));};
+  img.onerror=()=>ko('img');img.src=URL.createObjectURL(file);});}
+$('gsig-file').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{state.config.gymSig=await cleanSignatureImage(f);persist();renderGymSig();renderConsentPanel();toast('✅ Firma del gimnasio cargada');}catch(err){toast('No se detectó la firma en la foto. Prueba con más luz y fondo blanco.');}});
+function delGymSig(){if(!confirm('¿Quitar la firma del gimnasio?'))return;delete state.config.gymSig;persist();renderGymSig();renderConsentPanel();}
+function sigPairHTML(c,s,g,gsig,cls){
+  const fecha=c?new Date(c.at).toLocaleString('es-CL'):'';
+  return `<div class="${cls||'sig-pair'}">
+    <div>${c?`<img src="${sigToPNG(c.sig)}" alt="Firma alumno">`:'<div style="height:70px"></div>'}<div class="ln"><b>${esc(c?.name||s.nombre||'')}</b><br>RUT ${esc(c?.rut||s.rut||'____________')}<br>Firma del alumno${fecha?' · '+fecha:''}</div></div>
+    <div>${gsig?`<img src="${gsig}" alt="Firma gimnasio">`:'<div style="height:70px"></div>'}<div class="ln"><b>${esc(g.responsable||g.nombre||'')}</b><br>${esc(g.nombre||'')}${g.rut?' · '+esc(g.rut):''}<br>Firma del gimnasio</div></div></div>`;
+}
+function loadGymForm(){const g=gym();document.querySelectorAll('[data-gym]').forEach(i=>i.value=g[i.dataset.gym]||'');renderGymSig();}
 function saveGym(){const g={};document.querySelectorAll('[data-gym]').forEach(i=>g[i.dataset.gym]=i.value.trim());if(!g.texto)g.texto=DEFAULT_CONSENT;if(!g.nombre)g.nombre='Evolution Power';state.config.gym=g;persist();renderConsentPanel();toast('✅ Datos del gimnasio guardados');}
 function resetConsentText(){if(!confirm('¿Volver al texto predeterminado del consentimiento?'))return;document.querySelector('[data-gym=texto]').value=DEFAULT_CONSENT;saveGym();}
 function fillConsent(tpl,s,g,fecha){
-  const v={alumno:s.nombre||'________',rut:s.rut||'________',edad:s.edad||'__',gimnasio:g.nombre||'el gimnasio',responsable:g.responsable||'su equipo de entrenadores',direccion:g.direccion||'—',fecha:fecha||new Date().toLocaleDateString('es-CL'),
+  const v={registro:s.fechaRegistro?fdate(s.fechaRegistro):new Date().toLocaleDateString('es-CL'),alumno:s.nombre||'________',rut:s.rut||'________',edad:s.edad||'__',gimnasio:g.nombre||'el gimnasio',responsable:g.responsable||'su equipo de entrenadores',direccion:g.direccion||'—',fecha:fecha||new Date().toLocaleDateString('es-CL'),
     condicion:s.condicion||'No declara',medicamentos:s.medicamentos||'No declara',limitaciones:s.limitaciones||'No declara'};
   return String(tpl).replace(/\{(\w+)\}/g,(m,k)=>k in v?v[k]:m);
 }
@@ -3255,14 +3298,16 @@ function renderConsentPanel(){
   const s=formStudent(),g=gym(),c=s.consent;
   $('consent-preview').textContent=c?.text||fillConsent(g.texto,s,g);
   $('consent-status').innerHTML=c?`<span class="tag">✓ Firmado ${new Date(c.at).toLocaleDateString('es-CL')}</span>`:s.consentSent?`<span class="tag gold">📧 Enviado · pendiente</span>`:'<span class="tag red">Pendiente de firma</span>';
-  $('consent-sig-view').innerHTML=c?`<div class="verify" style="margin-top:6px"><img class="sig-img" style="width:180px;height:auto" src="${sigToPNG(c.sig,450,158)}" alt="Firma"><div class="small-note">Firmado por <b style="color:#fff">${esc(c.name)}</b>${c.rut?' · '+esc(c.rut):''}<br>${new Date(c.at).toLocaleString('es-CL')} · ${c.method==='remoto'?'firma remota':'firma presencial'}<br>Código: <b style="color:#f1d38e">${esc(c.code)}</b> <button class="btn sm danger" type="button" style="margin-left:6px" onclick="clearConsent()">Anular firma</button></div></div>`:'';
+  const dates=`<div class="small-note" style="margin-top:8px">📅 Fecha de registro: <b style="color:#fff">${s.fechaRegistro?fdate(s.fechaRegistro):'se asigna al guardar'}</b> · Fecha de firma: <b style="color:#fff">${c?new Date(c.at).toLocaleDateString('es-CL'):'pendiente'}</b></div>`;
+  $('consent-sig-view').innerHTML=dates+sigPairHTML(c,s,g,gymSigURL())+(c?`<div class="small-note" style="margin-top:6px">Código: <b style="color:#f1d38e">${esc(c.code)}</b> · ${c.method==='remoto'?'firma remota':'firma presencial'} <button class="btn sm danger" type="button" style="margin-left:6px" onclick="clearConsent()">Anular firma</button></div>`:'');
+  if(false)$('consent-sig-view').innerHTML=c?`<div class="verify" style="margin-top:6px"><img class="sig-img" style="width:180px;height:auto" src="${sigToPNG(c.sig,450,158)}" alt="Firma"><div class="small-note">Firmado por <b style="color:#fff">${esc(c.name)}</b>${c.rut?' · '+esc(c.rut):''}<br>${new Date(c.at).toLocaleString('es-CL')} · ${c.method==='remoto'?'firma remota':'firma presencial'}<br>Código: <b style="color:#f1d38e">${esc(c.code)}</b> <button class="btn sm danger" type="button" style="margin-left:6px" onclick="clearConsent()">Anular firma</button></div></div>`:'';
 }
 $('student-form').addEventListener('input',()=>{clearTimeout(window._cpt);window._cpt=setTimeout(renderConsentPanel,250);});
 function saveStudentKeep(){
   const f=$('student-form');const d=Object.fromEntries(new FormData(f).entries());d.nombre=(d.nombre||'').trim();
   if(!d.nombre){toast('Escribe el nombre del alumno primero');f.elements.nombre.focus();return null;}
   if(d.id){const i=state.students.findIndex(x=>x.id===d.id);if(i>-1)state.students[i]={...state.students[i],...d};}
-  else{d.id=uid();state.students.push(d);f.elements.id.value=d.id;$('student-form-title').textContent='Editar alumno · '+d.nombre;$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');}
+  else{d.id=uid();d.fechaRegistro=today();state.students.push(d);f.elements.id.value=d.id;$('student-form-title').textContent='Editar alumno · '+d.nombre;$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');}
   persist();return state.students.find(x=>x.id===d.id);
 }
 async function consentAction(act,btn){
@@ -3294,7 +3339,7 @@ async function consentAction(act,btn){
 }
 function copyText(t){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copiado')).catch(()=>{prompt('Copia el link:',t);});}
 async function signLink(s){
-  const g=gym();const o={i:s.id,n:s.nombre,r:s.rut||'',a:s.edad||'',c:s.condicion||'',m:s.medicamentos||'',l:s.limitaciones||'',g:{n:g.nombre,r:g.rut,p:g.responsable,d:g.direccion,t:g.telefono,e:g.correo}};
+  const g=gym();const o={i:s.id,fr:s.fechaRegistro||'',n:s.nombre,r:s.rut||'',a:s.edad||'',c:s.condicion||'',m:s.medicamentos||'',l:s.limitaciones||'',g:{n:g.nombre,r:g.rut,p:g.responsable,d:g.direccion,t:g.telefono,e:g.correo}};
   if(g.texto!==DEFAULT_CONSENT)o.t=g.texto;
   return siteURL()+'#firmar='+(await packObj(o));
 }
@@ -3335,16 +3380,19 @@ async function handleHash(){
 function renderSignPage(o){
   document.querySelector('.app').classList.add('hide');document.querySelector('.bnav')?.classList.add('hide');
   const g={nombre:o.g?.n||'Evolution Power',rut:o.g?.r||'',responsable:o.g?.p||'',direccion:o.g?.d||'',telefono:o.g?.t||'',correo:o.g?.e||''};
-  const s={nombre:o.n,rut:o.r,edad:o.a,condicion:o.c,medicamentos:o.m,limitaciones:o.l};
+  const s={nombre:o.n,rut:o.r,edad:o.a,condicion:o.c,medicamentos:o.m,limitaciones:o.l,fechaRegistro:o.fr};
   const pg=$('sign-page');pg.classList.remove('hide');
   pg.innerHTML=`<div class="brand" style="margin-bottom:16px"><div class="brand-badge">EP</div><div><h1>${esc(g.nombre.toUpperCase())}</h1><small>Consentimiento informado</small></div></div>
     <div class="card"><h3>Hola ${esc(String(o.n||'').split(' ')[0])} 👋</h3><p class="desc">Lee el documento, completa tu RUT y firma al final.</p>
-      <div class="consent-text" style="max-height:none">${esc(fillConsent(o.t||DEFAULT_CONSENT,s,g))}</div></div>
+      <div class="consent-text" style="max-height:none">${esc(fillConsent(o.t||DEFAULT_CONSENT,s,g))}</div>
+      <div class="small-note" style="margin-top:8px">📅 Fecha de registro: <b style="color:#fff">${o.fr?fdate(o.fr):'—'}</b> · Fecha de firma: <b style="color:#fff">${new Date().toLocaleDateString('es-CL')}</b></div>
+      <div id="sp-gsig"></div></div>
     <div class="card" id="sp-form"><div class="fieldgrid two"><div class="field"><label>Nombre completo</label><input id="sp-name" value="${esc(o.n||'')}"></div><div class="field"><label>RUT</label><input id="sp-rut" value="${esc(o.r||'')}" placeholder="12.345.678-9"></div></div>
       <div style="margin-top:12px" id="sp-pad"></div>
       <label style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px"><input type="checkbox" id="sp-ok" style="accent-color:var(--gold);width:22px;height:22px;flex:none"> Declaro haber leído y acepto el consentimiento informado.</label>
       <div class="actions" style="margin-top:14px;justify-content:space-between"><button class="btn ghost" type="button" onclick="window._pad.clear()">Borrar</button><button class="btn green" type="button" id="sp-go">✅ Firmar documento</button></div></div>
     <div id="sp-done"></div>`;
+  const showG=()=>{$('sp-gsig').innerHTML=REPO_SIG?`<div class="sig-pair" style="grid-template-columns:1fr"><div><img src="${REPO_SIG}" alt="Firma gimnasio"><div class="ln"><b>${esc(g.responsable||g.nombre)}</b> · Firma del gimnasio</div></div></div>`:'';};showG();loadRepoSig().then(showG);
   window._pad=makePad($('sp-pad'));
   $('sp-go').onclick=async()=>{
     if(!$('sp-ok').checked){toast('Marca la casilla de aceptación');return;}
@@ -3381,14 +3429,18 @@ function receiveSignature(o){
 window.addEventListener('hashchange',handleHash);
 
 /* --- PDF consentimiento --- */
-function consentBody(s,g,c){
+function consentBody(s,g,c,gsig){
+  if(gsig===undefined)gsig=gymSigURL();
   const text=c?.text||fillConsent(g.texto||DEFAULT_CONSENT,s,g);
   return `<div class="report-grid">${box('Gimnasio',[g.nombre,g.rut,g.direccion].filter(Boolean).join(' · '))}${box('Contacto',[g.responsable,g.telefono,g.correo].filter(Boolean).join(' · ')||'—')}</div>
-    <div class="report-box" style="white-space:pre-wrap;font-size:12px;line-height:1.55;background:#fafafa">${esc(text)}</div>
-    <h4>Firma</h4>
-    ${c?`<div class="report-grid"><div class="report-box" style="white-space:normal;background:#fff;border:1px solid #ddd"><img src="${sigToPNG(c.sig)}" style="width:100%;max-width:330px;display:block"><div style="border-top:1px solid #333;margin-top:2px;padding-top:4px"><b style="margin:0">${esc(c.name)}</b>RUT ${esc(c.rut||'—')}</div></div>
-      <div class="report-box" style="white-space:normal;display:flex;gap:10px;align-items:center"><img src="${qrDataURL(verifyText(c,g),3)}" style="width:110px;height:110px;image-rendering:pixelated;flex:none"><div><b>Firma electrónica simple</b>${new Date(c.at).toLocaleString('es-CL')}<br>${c.method==='remoto'?'Firmado a distancia (link/QR)':'Firmado en forma presencial'}<br>Código: <b style="display:inline">${esc(c.code)}</b></div></div></div>`
-     :`<div class="report-grid"><div class="report-box" style="height:120px;background:#fff;border:1px solid #ddd;display:flex;flex-direction:column;justify-content:flex-end"><div style="border-top:1px solid #333;padding-top:4px"><b style="margin:0">${esc(s.nombre)}</b>RUT ${esc(s.rut||'____________')}</div></div><div class="report-box" style="height:120px;background:#fff;border:1px solid #ddd;display:flex;flex-direction:column;justify-content:flex-end"><div style="border-top:1px solid #333;padding-top:4px"><b style="margin:0">${esc(g.responsable||g.nombre)}</b>Por ${esc(g.nombre)}</div></div></div>`}`;
+    <div class="report-grid">${box('Fecha de registro del alumno',s.fechaRegistro?fdate(s.fechaRegistro):(c?new Date(c.at).toLocaleDateString('es-CL'):'—'))}${box('Fecha de firma',c?new Date(c.at).toLocaleString('es-CL'):'Pendiente')}</div>
+    <div class="report-box" style="white-space:pre-wrap;font-size:13px;line-height:1.65;background:#fafafa;padding:16px 18px">${esc(text)}</div>
+    <h4>Firmas</h4>
+    <div class="report-grid">
+      <div class="report-box" style="white-space:normal;background:#fff;border:1px solid #ddd;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end">${c?`<img src="${sigToPNG(c.sig)}" style="width:100%;max-width:300px;max-height:95px;object-fit:contain;display:block;margin:0 auto">`:''}<div style="border-top:1px solid #333;margin-top:4px;padding-top:4px"><b style="margin:0">${esc(c?.name||s.nombre)}</b>RUT ${esc(c?.rut||s.rut||'____________')}<br><span style="color:#666">Firma del alumno</span></div></div>
+      <div class="report-box" style="white-space:normal;background:#fff;border:1px solid #ddd;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end">${gsig?`<img src="${gsig}" style="width:100%;max-width:300px;max-height:95px;object-fit:contain;display:block;margin:0 auto">`:''}<div style="border-top:1px solid #333;margin-top:4px;padding-top:4px"><b style="margin:0">${esc(g.responsable||g.nombre)}</b>${esc(g.nombre)}${g.rut?' · '+esc(g.rut):''}<br><span style="color:#666">Firma del gimnasio</span></div></div>
+    </div>
+    ${c?`<div class="report-box" style="white-space:normal;display:flex;gap:12px;align-items:center;margin-top:4px"><img src="${qrDataURL(verifyText(c,g),3)}" style="width:100px;height:100px;image-rendering:pixelated;flex:none"><div><b>Firma electrónica simple · verificación</b>${c.method==='remoto'?'Firmado a distancia (link/QR)':'Firmado en forma presencial'} el ${new Date(c.at).toLocaleString('es-CL')}<br>Código: <b style="display:inline">${esc(c.code)}</b></div></div>`:''}`;
 }
 async function consentPDF(c,s,g,btn){
   const label=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Generando…';
@@ -3890,7 +3942,7 @@ $('restore-file').addEventListener('change',e=>{
 
 /* ================= INIT ================= */
 $('eval-date').value=today();
-render();go('dashboard');loadGymForm();renderConsentPanel();handleHash();
+render();go('dashboard');loadGymForm();renderConsentPanel();handleHash();loadRepoSig();
 loadTemplate(false);setMacroInputs(DEFAULT_MACRO);updateCalc();
 </script>
 </body>
