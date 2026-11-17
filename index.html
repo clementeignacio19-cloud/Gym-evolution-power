@@ -201,6 +201,20 @@ td{font-size:13px;color:#edf1f5}
 .sig-pair>div{background:#fff;border-radius:12px;padding:8px 10px;color:#111;font-size:11.5px;min-height:110px;display:flex;flex-direction:column;justify-content:flex-end}
 .sig-pair img{max-width:100%;max-height:70px;object-fit:contain;align-self:center}
 .sig-pair .ln{border-top:1px solid #333;padding-top:3px;margin-top:2px}
+.nbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#ff4d4d;color:#fff;font-size:10.5px;font-weight:900;margin-left:auto;line-height:1}
+.mhead .bell{position:relative}.mhead .bell .nbadge{position:absolute;top:-6px;right:-6px;margin:0}
+.nt{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;border:1px solid #24262b;background:#0e0f11;margin-bottom:10px}
+.nt.unread{border-color:rgba(213,178,95,.4);background:linear-gradient(90deg,rgba(213,178,95,.07),#0e0f11 40%)}
+.nt.dup{border-color:rgba(255,107,107,.45);background:linear-gradient(90deg,rgba(255,107,107,.08),#0e0f11 40%)}
+.nt .ic{width:40px;height:40px;flex:none;border-radius:13px;display:grid;place-items:center;font-size:19px;background:#17191d}
+.nt .bd{flex:1;min-width:0}
+.nt .bd b{font-size:14px}
+.nt .bd p{margin:3px 0 0;font-size:12.5px;color:#a4a9b3}
+.nt .when{font-size:11px;color:#7f8691;white-space:nowrap}
+@media(max-width:720px){.nt{position:relative}.nt .bd{padding-top:16px}.nt .when{position:absolute;top:10px;right:14px}}
+.nt .sigcmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.nt .sigcmp div{background:#fff;border-radius:10px;padding:4px;text-align:center;color:#555;font-size:10.5px;font-weight:700}
+.nt .sigcmp img{max-width:100%;max-height:60px;display:block;margin:auto}
 .cf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
 .cf-card{border:1px solid #24262b;border-radius:18px;background:#0e0f11;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .cf-card.ok{border-color:rgba(48,211,139,.3)}
@@ -407,7 +421,7 @@ td{font-size:13px;color:#edf1f5}
 
   <header class="mhead">
     <div class="brand"><div class="brand-badge">EP</div><div><h1>EVOLUTION POWER</h1><small>Nutrition · Training · Performance</small></div></div>
-    <button class="btn sm secondary" onclick="backup()" title="Descargar respaldo">💾</button>
+    <div class="actions" style="flex-wrap:nowrap"><button class="btn sm secondary bell" onclick="go('notifs')" title="Notificaciones">🔔<span class="nbadge hide" data-nbadge></span></button><button class="btn sm secondary" onclick="backup()" title="Descargar respaldo">💾</button></div>
   </header>
 
   <main class="main">
@@ -684,6 +698,16 @@ td{font-size:13px;color:#edf1f5}
         <div class="field" style="margin-top:16px"><label>Indicaciones generales</label><textarea id="workout-notes" placeholder="Calentamiento, técnica, intensidad, progresión, recuperación..."></textarea></div>
         <div class="notice">Ajusta cargas, volumen, frecuencia y ejercicios a la evaluación del alumno. Ante lesiones o limitaciones, deriva o coordina con el profesional correspondiente.</div>
         <div class="actions" style="margin-top:16px"><button class="btn green" type="button" onclick="saveWorkout()">Guardar plan semanal y abrir PDF</button></div>
+      </div>
+    </section>
+
+    <!-- ================= NOTIFICACIONES ================= -->
+    <section id="view-notifs" class="view hide">
+      <div class="card">
+        <div class="rowhead"><div><h3>🔔 Notificaciones</h3><p class="desc" style="margin:0" id="nt-sub">Avisos de firmas y del sistema.</p></div>
+          <div class="actions"><button class="btn secondary sm" type="button" onclick="pollSignatures(true)">🔄 Revisar ahora</button><button class="btn secondary sm" type="button" onclick="markAllRead()">✓ Marcar todo como leído</button><button class="btn ghost sm" type="button" onclick="clearNotifs()">🗑 Limpiar leídas</button></div></div>
+        <div class="seg" id="nt-filter" style="grid-template-columns:repeat(3,1fr);max-width:460px;margin-bottom:12px"><button type="button" data-f="all" class="on">Todas</button><button type="button" data-f="unread">No leídas</button><button type="button" data-f="dup">Duplicadas</button></div>
+        <div id="nt-list"></div>
       </div>
     </section>
 
@@ -3042,8 +3066,8 @@ var qrcode = function() {
 <script>
 /* ================= DATA ================= */
 const KEY='evolution_power_demo_v1';
-let state={students:[],evals:[],plans:[],workouts:[],config:{}};
-try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);state={students:Array.isArray(o.students)?o.students:[],evals:Array.isArray(o.evals)?o.evals:[],plans:Array.isArray(o.plans)?o.plans:[],workouts:Array.isArray(o.workouts)?o.workouts:[],config:o.config&&typeof o.config==='object'?o.config:{}};}}catch(e){}
+let state={students:[],evals:[],plans:[],workouts:[],config:{},notifs:[]};
+try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);state={students:Array.isArray(o.students)?o.students:[],evals:Array.isArray(o.evals)?o.evals:[],plans:Array.isArray(o.plans)?o.plans:[],workouts:Array.isArray(o.workouts)?o.workouts:[],config:o.config&&typeof o.config==='object'?o.config:{},notifs:Array.isArray(o.notifs)?o.notifs:[]};}}catch(e){}
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -3084,16 +3108,17 @@ function calcMacros(m){
 }
 
 /* ================= NAV ================= */
-const VIEWS=[['dashboard','⚡','Inicio'],['alumnos','👥','Alumnos'],['evaluacion','📋','Evaluación'],['plan','🥗','Plan Alimentario','Nutrición'],['entrenamiento','🏋️','Entrenamiento semanal','Rutina'],['firmas','✍️','Consentimientos firmados','Firmas'],['informe','🧾','Informes PDF','PDF']];
+const VIEWS=[['dashboard','⚡','Inicio'],['alumnos','👥','Alumnos'],['evaluacion','📋','Evaluación'],['plan','🥗','Plan Alimentario','Nutrición'],['entrenamiento','🏋️','Entrenamiento semanal','Rutina'],['firmas','✍️','Consentimiento informado','Firmas'],['notifs','🔔','Notificaciones'],['informe','🧾','Informes PDF','PDF']];
 $('nav').innerHTML=VIEWS.map(([v,i,l])=>`<button data-view="${v}"><span class="ic">${i}</span>${l}</button>`).join('');
-$('bnav').innerHTML=VIEWS.map(([v,i,l,s])=>`<button data-view="${v}"><span class="ic">${i}</span>${s||l}</button>`).join('');
+$('bnav').innerHTML=VIEWS.filter(v=>v[0]!=='notifs').map(([v,i,l,s])=>`<button data-view="${v}"><span class="ic">${i}</span>${s||l}</button>`).join('');
 const titles={
   dashboard:['Control nutricional y seguimiento fitness','Alumnos, evaluaciones con progreso, macros, pautas, rutinas e informes PDF.'],
   alumnos:['Gestión de alumnos','Toda la base del gimnasio en una sola interfaz.'],
   evaluacion:['Evaluación física y nutricional','Mediciones, hidratación, hábitos y evolución de peso.'],
   plan:['Plan alimentario','Calculadora de macros de la planilla maestra + pauta por comida.'],
   entrenamiento:['Plan semanal de entrenamiento','Rutinas diarias para cada alumno, listas para PDF.'],
-  firmas:['Consentimientos firmados','Todos los consentimientos con la firma de cada alumno.'],
+  firmas:['Consentimiento informado','Todos los consentimientos con la firma de cada alumno.'],
+  notifs:['Notificaciones','Firmas recibidas, firmas duplicadas y otros avisos del sistema.'],
   informe:['Informe profesional en PDF','Documento limpio y listo para compartir.']
 };
 let currentView='dashboard';
@@ -3104,6 +3129,7 @@ function go(view){
   $('page-title').textContent=titles[view][0];$('page-sub').textContent=titles[view][1];
   if(view==='informe'){drawReport();renderQuick();}
   if(view==='firmas'){renderFirmas();pollSignatures();}
+  if(view==='notifs'){renderNotifs();pollSignatures();}
   if(view==='plan'&&!planLoadedFor)loadPlan();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -3123,7 +3149,7 @@ function render(){
   $('stat-students').textContent=state.students.length;$('stat-evals').textContent=state.evals.length;
   $('stat-plans').textContent=state.plans.length;$('stat-workouts').textContent=state.workouts.length;
   $('student-count').textContent=state.students.length+' alumno(s)';
-  renderStudents();renderDupBanner();renderFirmas();
+  renderStudents();renderDupBanner();renderFirmas();renderNotifs();renderBadges();
   const rec=state.evals.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).slice(0,6);
   $('recent-evals').innerHTML=rec.length?'<div class="table-wrap"><table class="rt"><thead><tr><th>Alumno</th><th>Fecha</th><th>Peso</th><th>Variación</th></tr></thead><tbody>'+rec.map(e=>{
     const s=state.students.find(x=>x.id===e.studentId);const l=evalsOf(e.studentId);const i=l.findIndex(x=>x.id===e.id);
@@ -3351,7 +3377,7 @@ async function consentAction(act,btn,sid){
       if(!s.correo){toast('Agrega el correo del alumno en la ficha');$('student-form').elements.correo.focus();return;}
       const subject=`Consentimiento informado · ${g.nombre}`;
       const body=`Hola ${s.nombre.split(' ')[0]}:\n\nBienvenido/a a ${g.nombre}. Para completar tu inscripción, revisa y firma el consentimiento informado desde tu celular en este link:\n\n${link}\n\nAl firmar podrás descargar tu copia en PDF y se enviará la firma al gimnasio.\n\nSaludos,\n${g.responsable||g.nombre}${g.telefono?'\n'+g.telefono:''}`;
-      const i=state.students.findIndex(x=>x.id===s.id);state.students[i].consentSent=new Date().toISOString();persist();renderConsentPanel();
+      const i=state.students.findIndex(x=>x.id===s.id);state.students[i].consentSent=new Date().toISOString();addNotif({type:'enviado',sid:s.id,title:`Consentimiento enviado a ${s.nombre}`,text:`Link de firma enviado a ${s.correo}.`,read:true});persist();renderConsentPanel();
       openModal(`<div class="modal-head"><div><div class="eyebrow">Enviar por correo</div><h3>📧 ${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">Para: <b>${esc(s.correo)}</b></p></div><button class="btn sm ghost" type="button" onclick="closeModal()">✕</button></div>
         <div class="actions" style="flex-direction:column;align-items:stretch">
           <a class="btn primary" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(s.correo)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Abrir en Gmail</a>
@@ -3393,7 +3419,7 @@ async function confirmLocalSign(sid){
   const at=new Date().toISOString(),text=fillConsent(g.texto,{...s,rut:rut||s.rut},g,new Date(at).toLocaleDateString('es-CL'));
   const sig=window._pad.strokes.map(st=>st.slice());
   const code=await signCode({text,name,rut,at,sig});
-  storeConsent(sid,{name,rut,at,sig,code,text,method:'presencial'});closeModal();toast('✅ Consentimiento firmado');
+  const r=registerSignature(sid,{name,rut,at,sig,code,text,method:'presencial'},'presencial');persist();renderConsentPanel();closeModal();toast(r==='dup'?'⚠️ Ya tenía una firma: elige cuál conservar en Notificaciones':'✅ Consentimiento firmado');
 }
 function storeConsent(sid,c){
   const i=state.students.findIndex(x=>x.id===sid);if(i<0)return false;
@@ -3401,6 +3427,58 @@ function storeConsent(sid,c){
   if($('student-form').elements.id.value===sid){if(c.rut&&!$('student-form').elements.rut.value)$('student-form').elements.rut.value=c.rut;renderConsentPanel();}
   return true;
 }
+/* --- notificaciones --- */
+function addNotif(n){state.notifs=state.notifs||[];state.notifs.unshift({id:uid(),at:new Date().toISOString(),read:false,...n});if(state.notifs.length>300)state.notifs.length=300;}
+function unreadCount(){return (state.notifs||[]).filter(n=>!n.read).length;}
+function renderBadges(){
+  const c=unreadCount();
+  document.querySelectorAll('[data-nbadge]').forEach(b=>{b.textContent=c>99?'99+':c;b.classList.toggle('hide',!c);});
+  const navBtn=document.querySelector('#nav [data-view=notifs]');
+  if(navBtn){let b=navBtn.querySelector('.nbadge');if(!b){b=document.createElement('span');b.className='nbadge';b.setAttribute('data-nbadge','');navBtn.appendChild(b);}b.textContent=c>99?'99+':c;b.classList.toggle('hide',!c);}
+  const fb=document.querySelector('#nav [data-view=firmas]'),bb=document.querySelector('#bnav [data-view=firmas] .ic');
+  const dups=(state.notifs||[]).filter(n=>n.type==='dup'&&!n.resolved).length;
+  if(fb){let b=fb.querySelector('.nbadge');if(!b){b=document.createElement('span');b.className='nbadge';fb.appendChild(b);}b.textContent=dups;b.classList.toggle('hide',!dups);}
+  document.title=(c?'('+c+') ':'')+'Evolution Power · Sistema Nutricional & Evaluación';
+}
+let ntFilter='all';
+$('nt-filter').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;ntFilter=b.dataset.f;document.querySelectorAll('#nt-filter button').forEach(x=>x.classList.toggle('on',x===b));renderNotifs();});
+const NT_IC={firma:'✍️',presencial:'🖊️',dup:'⚠️',reemplazo:'🔁',enviado:'📧',sistema:'ℹ️'};
+function renderNotifs(){
+  if(!$('nt-list'))return;
+  const all=state.notifs||[];let list=all;
+  if(ntFilter==='unread')list=all.filter(n=>!n.read);if(ntFilter==='dup')list=all.filter(n=>n.type==='dup');
+  $('nt-sub').textContent=all.length?`${unreadCount()} sin leer · ${all.length} en total`:'Avisos de firmas y del sistema.';
+  $('nt-list').innerHTML=list.length?list.map(n=>{
+    const s=state.students.find(x=>x.id===n.sid);
+    const dupBox=n.type==='dup'?`<div class="sigcmp"><div>${s?.consent?`<img src="${sigToPNG(s.consent.sig,360,126)}">`:''}Firma actual<br>${s?.consent?new Date(s.consent.at).toLocaleString('es-CL'):'—'}</div><div>${n.c?`<img src="${sigToPNG(n.c.sig,360,126)}">`:''}Firma nueva<br>${n.c?new Date(n.c.at).toLocaleString('es-CL'):''}</div></div>
+      ${n.resolved?`<p style="color:#69f2b6">✓ ${esc(n.resolved)}</p>`:`<div class="actions" style="margin-top:10px"><button class="btn sm secondary" type="button" onclick="resolveDup('${n.id}','keep')">Mantener la actual</button><button class="btn sm primary" type="button" onclick="resolveDup('${n.id}','replace')">Usar la firma nueva</button></div>`}`:'';
+    return `<div class="nt ${n.type==='dup'&&!n.resolved?'dup':''} ${n.read?'':'unread'}" onclick="markRead('${n.id}')"><div class="ic">${NT_IC[n.type]||'🔔'}</div><div class="bd"><b>${esc(n.title)}</b><p>${esc(n.text||'')}</p>${dupBox}
+      ${s&&n.type!=='dup'?`<div class="actions" style="margin-top:8px"><button class="btn sm ghost" type="button" onclick="event.stopPropagation();go('firmas');setTimeout(()=>viewConsent('${esc(s.id)}'),300)">👁 Ver consentimiento</button></div>`:''}</div><div class="when">${new Date(n.at).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}${n.read?'':' ●'}</div></div>`;
+  }).join(''):'<div class="empty">🔔 No hay notificaciones.</div>';
+}
+function markRead(id){const n=(state.notifs||[]).find(x=>x.id===id);if(n&&!n.read){n.read=true;persist();}}
+function markAllRead(){(state.notifs||[]).forEach(n=>n.read=true);persist();toast('Todo marcado como leído');}
+function clearNotifs(){state.notifs=(state.notifs||[]).filter(n=>!n.read||(n.type==='dup'&&!n.resolved));persist();toast('Notificaciones leídas eliminadas');}
+function resolveDup(id,how){
+  const n=state.notifs.find(x=>x.id===id);if(!n)return;const i=state.students.findIndex(x=>x.id===n.sid);
+  if(how==='replace'&&i>-1&&n.c){if(!confirm('¿Reemplazar la firma actual por la nueva?'))return;state.students[i].consent=n.c;n.resolved='Se usó la firma nueva';}
+  else n.resolved='Se mantuvo la firma original';
+  n.read=true;persist();renderConsentPanel();toast('✓ '+n.resolved);
+}
+/* registrar firma con control de duplicados: devuelve 'nuevo' | 'dup' | 'igual' */
+function registerSignature(sid,c,origin){
+  const i=state.students.findIndex(x=>x.id===sid);if(i<0)return 'none';const s=state.students[i];
+  if(s.consent&&s.consent.code===c.code)return 'igual';
+  if((state.notifs||[]).some(n=>n.type==='dup'&&n.c?.code===c.code))return 'igual';
+  if(s.consent){
+    addNotif({type:'dup',sid,title:`${c.name} firmó dos veces`,text:`Ya tenía un consentimiento firmado el ${new Date(s.consent.at).toLocaleString('es-CL')} (código ${s.consent.code}). Llegó otra firma el ${new Date(c.at).toLocaleString('es-CL')} (código ${c.code}) ${origin==='remoto'?'desde su celular':'en forma presencial'}. Elige cuál conservar.`,c});
+    return 'dup';
+  }
+  state.students[i].consent=c;if(c.rut&&!s.rut)state.students[i].rut=c.rut;
+  addNotif({type:origin==='remoto'?'firma':'presencial',sid,title:`${c.name} firmó el consentimiento`,text:`${origin==='remoto'?'Firma remota (link/QR)':'Firma presencial'} · ${new Date(c.at).toLocaleString('es-CL')} · Código ${c.code}`});
+  return 'nuevo';
+}
+
 /* --- vista consentimientos firmados --- */
 let cfFilter='all';
 $('cf-filter').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;cfFilter=b.dataset.f;document.querySelectorAll('#cf-filter button').forEach(x=>x.classList.toggle('on',x===b));renderFirmas();});
@@ -3504,7 +3582,7 @@ function receiveSignature(o){
     <div class="field" style="margin-top:12px"><label>Guardar en la ficha de</label><select id="rs-sid">${opts||'<option value="">— No hay alumnos en este navegador —</option>'}</select></div>
     ${!s?'<div class="notice">No encontré la ficha original en este navegador. Elige el alumno correcto.</div>':''}
     <div class="actions" style="margin-top:14px;justify-content:flex-end"><button class="btn secondary" type="button" onclick="closeModal()">Cancelar</button><button class="btn green" type="button" id="rs-ok">✅ Guardar firma</button></div>`);
-  $('rs-ok').onclick=()=>{const sid=$('rs-sid').value;if(!sid){toast('Primero registra al alumno');return;}storeConsent(sid,c);closeModal();toast('✅ Firma guardada en la ficha de '+state.students.find(x=>x.id===sid).nombre);};
+  $('rs-ok').onclick=()=>{const sid=$('rs-sid').value;if(!sid){toast('Primero registra al alumno');return;}const r=registerSignature(sid,c,'remoto');persist();renderConsentPanel();closeModal();toast(r==='dup'?'⚠️ Este alumno ya había firmado: revisa Notificaciones':r==='igual'?'Esta firma ya estaba registrada':'✅ Firma guardada en la ficha de '+state.students.find(x=>x.id===sid).nombre);};
 }
 window.addEventListener('hashchange',handleHash);
 
@@ -3541,17 +3619,17 @@ async function pollSignatures(manual){
   if(polling)return;polling=true;
   try{
     const r=await fetch(`https://ntfy.sh/${n.topic}/json?poll=1&since=${encodeURIComponent(n.since||'12h')}`,{cache:'no-store'});
-    if(!r.ok)throw 0;const lines=(await r.text()).split('\n').filter(Boolean);const got=[];let last=n.since;
+    if(!r.ok)throw 0;const lines=(await r.text()).split('\n').filter(Boolean);const got=[],dups=[];let last=n.since;
     for(const ln of lines){let ev;try{ev=JSON.parse(ln);}catch(e){continue;}if(ev.event!=='message')continue;last=ev.id;
       try{const o=await unpackObj(await decStr(n.key,ev.message));const s=state.students.find(x=>x.id===o.i);if(!s)continue;
-        if(s.consent&&s.consent.at>=o.at)continue;
         const g=gym();const text=o.x||fillConsent(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g);
-        const i=state.students.findIndex(x=>x.id===o.i);state.students[i].consent={name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto'};
-        if(o.r&&!state.students[i].rut)state.students[i].rut=o.r;got.push(o.n);}catch(e){}}
+        const r=registerSignature(o.i,{name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto'},'remoto');
+        if(r==='nuevo')got.push(o.n);else if(r==='dup')dups.push(o.n);}catch(e){}}
     state.config.notify.since=last||n.since;
+    if(dups.length){persist();toast('⚠️ Firma duplicada: '+dups.join(', ')+' — revisa Notificaciones');try{if(window.Notification&&Notification.permission==='granted')new Notification('Evolution Power',{body:'⚠️ Firmó dos veces: '+dups.join(', ')});}catch(e){}}
     if(got.length){persist();renderConsentPanel();toast('✍️ Nueva firma: '+got.join(', '));
       try{if(window.Notification&&Notification.permission==='granted')new Notification('Evolution Power',{body:'✍️ Firmó el consentimiento: '+got.join(', ')});}catch(e){}}
-    else{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}if(manual)toast('Sin firmas nuevas');}
+    if(!got.length&&!dups.length){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}if(manual)toast('Sin firmas nuevas');}
   }catch(e){if(manual)toast('⚠ No se pudo revisar (sin conexión)');}
   finally{polling=false;}
 }
@@ -4076,7 +4154,7 @@ $('restore-file').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;const rd=new FileReader();
   rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!Array.isArray(o.students))throw 0;
     if(!confirm('¿Reemplazar los datos actuales por el respaldo ('+o.students.length+' alumnos)?'))return;
-    state={students:o.students,evals:o.evals||[],plans:o.plans||[],workouts:o.workouts||[],config:o.config||{}};buildPlanTypes();persist();planLoadedFor=null;toast('Respaldo restaurado');}catch(err){toast('Archivo de respaldo no válido');}};
+    state={students:o.students,evals:o.evals||[],plans:o.plans||[],workouts:o.workouts||[],config:o.config||{},notifs:o.notifs||[]};buildPlanTypes();persist();planLoadedFor=null;toast('Respaldo restaurado');}catch(err){toast('Archivo de respaldo no válido');}};
   rd.readAsText(f);e.target.value='';
 });
 
