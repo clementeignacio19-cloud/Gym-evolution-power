@@ -201,6 +201,17 @@ td{font-size:13px;color:#edf1f5}
 .sig-pair>div{background:#fff;border-radius:12px;padding:8px 10px;color:#111;font-size:11.5px;min-height:110px;display:flex;flex-direction:column;justify-content:flex-end}
 .sig-pair img{max-width:100%;max-height:70px;object-fit:contain;align-self:center}
 .sig-pair .ln{border-top:1px solid #333;padding-top:3px;margin-top:2px}
+.cf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.cf-card{border:1px solid #24262b;border-radius:18px;background:#0e0f11;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.cf-card.ok{border-color:rgba(48,211,139,.3)}
+.cf-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.cf-top b{font-size:15px}
+.cf-sigs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cf-sigs div{background:#fff;border-radius:10px;height:74px;display:grid;place-items:center;padding:4px;position:relative}
+.cf-sigs img{max-width:100%;max-height:52px;object-fit:contain}
+.cf-sigs small{position:absolute;bottom:3px;left:0;right:0;text-align:center;color:#888;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.cf-meta{font-size:12px;color:#a4a9b3;line-height:1.5}
+.cf-meta b{color:#f1d38e}
 .consent-panel{margin-top:18px;padding:16px;border-radius:18px;border:1px solid #3a3427;background:linear-gradient(180deg,#121110,#0c0c0d)}
 .consent-text{max-height:220px;overflow:auto;white-space:pre-wrap;font-size:12.5px;line-height:1.55;color:#d9dce2;background:#0b0c0e;border:1px solid #24262b;border-radius:13px;padding:12px 14px}
 .consent-check{display:block;margin-top:10px}
@@ -337,7 +348,7 @@ td{font-size:13px;color:#edf1f5}
   .mhead .brand-badge{width:38px;height:38px;border-radius:12px;font-size:16px}
   .mhead .brand h1{font-size:16px}
   .mhead .brand small{font-size:8.5px;letter-spacing:1.8px;margin-top:3px}
-  .bnav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(10,10,12,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid #23252b;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .bnav{display:grid;grid-template-columns:repeat(7,1fr);position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(10,10,12,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid #23252b;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
   .bnav button{background:none;border:0;color:#8d939c;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;font-size:10px;font-weight:700;border-radius:12px}
   .bnav button .ic{font-size:19px;line-height:1;filter:grayscale(1);opacity:.8;transition:.15s}
   .bnav button.active{color:var(--gold2)}
@@ -673,6 +684,25 @@ td{font-size:13px;color:#edf1f5}
         <div class="field" style="margin-top:16px"><label>Indicaciones generales</label><textarea id="workout-notes" placeholder="Calentamiento, técnica, intensidad, progresión, recuperación..."></textarea></div>
         <div class="notice">Ajusta cargas, volumen, frecuencia y ejercicios a la evaluación del alumno. Ante lesiones o limitaciones, deriva o coordina con el profesional correspondiente.</div>
         <div class="actions" style="margin-top:16px"><button class="btn green" type="button" onclick="saveWorkout()">Guardar plan semanal y abrir PDF</button></div>
+      </div>
+    </section>
+
+    <!-- ================= CONSENTIMIENTOS ================= -->
+    <section id="view-firmas" class="view hide">
+      <div class="metrics" style="margin-top:0">
+        <div class="metric"><div class="metric-top"><div><span>Firmados</span><strong id="cf-ok">0</strong></div><div class="dot">✅</div></div><span>Consentimientos con firma.</span></div>
+        <div class="metric"><div class="metric-top"><div><span>Pendientes</span><strong id="cf-pend">0</strong></div><div class="dot">⏳</div></div><span>Aún sin firmar.</span></div>
+        <div class="metric"><div class="metric-top"><div><span>Enviados</span><strong id="cf-sent">0</strong></div><div class="dot">📧</div></div><span>Link enviado, sin firma.</span></div>
+        <div class="metric"><div class="metric-top"><div><span>Firma gimnasio</span><strong id="cf-gym" style="font-size:20px">—</strong></div><div class="dot">🖊️</div></div><span>En todos los documentos.</span></div>
+      </div>
+      <div class="card">
+        <div class="rowhead"><div><h3>✍️ Consentimientos</h3><p class="desc" style="margin:0">Se actualiza solo cuando un alumno firma.</p></div>
+          <div class="actions"><button class="btn secondary sm" type="button" onclick="pollSignatures(true)">🔄 Revisar firmas</button><button class="btn primary sm" type="button" id="cf-all" onclick="downloadAllConsents(this)">⬇️ PDF de todos los firmados</button></div></div>
+        <div class="fieldgrid" style="margin-bottom:12px">
+          <div class="search" style="margin:0;grid-column:span 2"><input id="cf-q" placeholder="Buscar por nombre, RUT o código..."></div>
+          <div class="seg" id="cf-filter" style="grid-template-columns:repeat(3,1fr)"><button type="button" data-f="all" class="on">Todos</button><button type="button" data-f="ok">Firmados</button><button type="button" data-f="pend">Pendientes</button></div>
+        </div>
+        <div class="cf-grid" id="cf-list"></div>
       </div>
     </section>
 
@@ -3054,7 +3084,7 @@ function calcMacros(m){
 }
 
 /* ================= NAV ================= */
-const VIEWS=[['dashboard','⚡','Inicio'],['alumnos','👥','Alumnos'],['evaluacion','📋','Evaluación'],['plan','🥗','Plan Alimentario','Nutrición'],['entrenamiento','🏋️','Entrenamiento semanal','Rutina'],['informe','🧾','Informes PDF','PDF']];
+const VIEWS=[['dashboard','⚡','Inicio'],['alumnos','👥','Alumnos'],['evaluacion','📋','Evaluación'],['plan','🥗','Plan Alimentario','Nutrición'],['entrenamiento','🏋️','Entrenamiento semanal','Rutina'],['firmas','✍️','Consentimientos firmados','Firmas'],['informe','🧾','Informes PDF','PDF']];
 $('nav').innerHTML=VIEWS.map(([v,i,l])=>`<button data-view="${v}"><span class="ic">${i}</span>${l}</button>`).join('');
 $('bnav').innerHTML=VIEWS.map(([v,i,l,s])=>`<button data-view="${v}"><span class="ic">${i}</span>${s||l}</button>`).join('');
 const titles={
@@ -3063,6 +3093,7 @@ const titles={
   evaluacion:['Evaluación física y nutricional','Mediciones, hidratación, hábitos y evolución de peso.'],
   plan:['Plan alimentario','Calculadora de macros de la planilla maestra + pauta por comida.'],
   entrenamiento:['Plan semanal de entrenamiento','Rutinas diarias para cada alumno, listas para PDF.'],
+  firmas:['Consentimientos firmados','Todos los consentimientos con la firma de cada alumno.'],
   informe:['Informe profesional en PDF','Documento limpio y listo para compartir.']
 };
 let currentView='dashboard';
@@ -3072,6 +3103,7 @@ function go(view){
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
   $('page-title').textContent=titles[view][0];$('page-sub').textContent=titles[view][1];
   if(view==='informe'){drawReport();renderQuick();}
+  if(view==='firmas'){renderFirmas();pollSignatures();}
   if(view==='plan'&&!planLoadedFor)loadPlan();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -3091,7 +3123,7 @@ function render(){
   $('stat-students').textContent=state.students.length;$('stat-evals').textContent=state.evals.length;
   $('stat-plans').textContent=state.plans.length;$('stat-workouts').textContent=state.workouts.length;
   $('student-count').textContent=state.students.length+' alumno(s)';
-  renderStudents();renderDupBanner();
+  renderStudents();renderDupBanner();renderFirmas();
   const rec=state.evals.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).slice(0,6);
   $('recent-evals').innerHTML=rec.length?'<div class="table-wrap"><table class="rt"><thead><tr><th>Alumno</th><th>Fecha</th><th>Peso</th><th>Variación</th></tr></thead><tbody>'+rec.map(e=>{
     const s=state.students.find(x=>x.id===e.studentId);const l=evalsOf(e.studentId);const i=l.findIndex(x=>x.id===e.id);
@@ -3310,8 +3342,8 @@ function saveStudentKeep(){
   else{d.id=uid();d.fechaRegistro=today();state.students.push(d);f.elements.id.value=d.id;$('student-form-title').textContent='Editar alumno · '+d.nombre;$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');}
   persist();return state.students.find(x=>x.id===d.id);
 }
-async function consentAction(act,btn){
-  const s=saveStudentKeep();if(!s)return;const g=gym();
+async function consentAction(act,btn,sid){
+  const s=sid?state.students.find(x=>x.id===sid):saveStudentKeep();if(!s)return;const g=gym();
   if(act==='sign')return openSignModal(s.id);
   if(act==='qr'||act==='mail'){
     const link=await signLink(s);
@@ -3368,6 +3400,49 @@ function storeConsent(sid,c){
   state.students[i].consent=c;if(c.rut&&!state.students[i].rut)state.students[i].rut=c.rut;persist();
   if($('student-form').elements.id.value===sid){if(c.rut&&!$('student-form').elements.rut.value)$('student-form').elements.rut.value=c.rut;renderConsentPanel();}
   return true;
+}
+/* --- vista consentimientos firmados --- */
+let cfFilter='all';
+$('cf-filter').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;cfFilter=b.dataset.f;document.querySelectorAll('#cf-filter button').forEach(x=>x.classList.toggle('on',x===b));renderFirmas();});
+$('cf-q').addEventListener('input',()=>renderFirmas());
+function renderFirmas(){
+  if(!$('cf-list'))return;
+  const all=state.students,ok=all.filter(s=>s.consent),pend=all.filter(s=>!s.consent);
+  $('cf-ok').textContent=ok.length;$('cf-pend').textContent=pend.length;$('cf-sent').textContent=pend.filter(s=>s.consentSent).length;
+  const gsig=gymSigURL();$('cf-gym').textContent=gsig?'✓ Cargada':'Falta';$('cf-gym').style.color=gsig?'#69f2b6':'#ff9b9b';
+  $('cf-all').disabled=!ok.length;
+  const q=normName($('cf-q').value);
+  let list=(cfFilter==='ok'?ok:cfFilter==='pend'?pend:all).filter(s=>!q||normName([s.nombre,s.rut,s.consent?.code,s.consent?.rut].join(' ')).includes(q));
+  list=list.slice().sort((a,b)=>(b.consent?.at||'').localeCompare(a.consent?.at||'')||a.nombre.localeCompare(b.nombre));
+  const g=gym();
+  $('cf-list').innerHTML=list.length?list.map(s=>{const c=s.consent,id=esc(s.id);
+    if(c)return `<div class="cf-card ok"><div class="cf-top"><div><b>${esc(c.name)}</b><div class="small-note">RUT ${esc(c.rut||s.rut||'—')}</div></div><span class="tag">✓ Firmado</span></div>
+      <div class="cf-sigs"><div><img src="${sigToPNG(c.sig,420,147)}" alt="Firma alumno"><small>Alumno</small></div><div>${gsig?`<img src="${gsig}" alt="Firma gimnasio">`:'<span style="color:#bbb;font-size:11px">Sin firma</span>'}<small>${esc(g.responsable||'Gimnasio')}</small></div></div>
+      <div class="cf-meta">📅 ${new Date(c.at).toLocaleString('es-CL')} · ${c.method==='remoto'?'📱 Remota':'✍️ Presencial'}<br>Registro: ${s.fechaRegistro?fdate(s.fechaRegistro):'—'} · Código <b>${esc(c.code)}</b></div>
+      <div class="actions"><button class="btn sm secondary" type="button" onclick="viewConsent('${id}')">👁 Ver</button><button class="btn sm primary" type="button" onclick="downloadPDF('${id}','consentimiento',null,this)">⬇️ PDF</button></div></div>`;
+    return `<div class="cf-card"><div class="cf-top"><div><b>${esc(s.nombre)}</b><div class="small-note">RUT ${esc(s.rut||'—')}${s.correo?' · '+esc(s.correo):''}</div></div>${s.consentSent?'<span class="tag gold">📧 Enviado</span>':'<span class="tag red">Pendiente</span>'}</div>
+      <div class="cf-meta">${s.consentSent?'Link enviado el '+new Date(s.consentSent).toLocaleString('es-CL'):'Aún no se ha enviado el consentimiento.'}</div>
+      <div class="actions"><button class="btn sm green" type="button" onclick="openSignModal('${id}')">✍️ Firmar aquí</button><button class="btn sm primary" type="button" onclick="consentAction('mail',this,'${id}')">📧 Enviar</button><button class="btn sm secondary" type="button" onclick="consentAction('qr',this,'${id}')">📱 QR</button></div></div>`;
+  }).join(''):`<div class="empty" style="grid-column:1/-1">${all.length?'Sin resultados.':'Aún no hay alumnos registrados.'}</div>`;
+}
+function viewConsent(sid){
+  const s=state.students.find(x=>x.id===sid);if(!s)return;
+  openModal(`<div class="modal-head"><div><div class="eyebrow">Consentimiento informado</div><h3>✍️ ${esc(s.nombre)}</h3></div><button class="btn sm ghost" type="button" onclick="closeModal()">✕</button></div>
+    <div class="report-wrap" style="padding:20px;border-radius:16px">${consentBody(s,gym(),s.consent)}</div>
+    <div class="actions" style="margin-top:14px;justify-content:space-between"><button class="btn sm danger" type="button" onclick="annulConsent('${esc(sid)}')">Anular firma</button><button class="btn sm primary" type="button" onclick="downloadPDF('${esc(sid)}','consentimiento',null,this)">⬇️ Descargar PDF</button></div>`);
+}
+function annulConsent(sid){const s=state.students.find(x=>x.id===sid);if(!s||!confirm('¿Anular la firma de '+s.nombre+'? Tendrá que firmar de nuevo.'))return;delete s.consent;persist();closeModal();renderConsentPanel();toast('Firma anulada');}
+async function downloadAllConsents(btn){
+  const ok=state.students.filter(s=>s.consent).sort((a,b)=>a.nombre.localeCompare(b.nombre));if(!ok.length)return;
+  const label=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Generando…';
+  try{
+    if(!(await ensurePdfLib())){toast('⚠ No se pudo cargar el generador de PDF. Revisa tu conexión.');return;}
+    const g=gym();const node=document.createElement('div');node.className='report-wrap pdf-mode';
+    node.innerHTML=ok.map((s,i)=>`${i?'<div class="html2pdf__page-break"></div>':''}<div class="report-header"><div><div class="report-eyebrow">Consentimiento informado</div><div class="report-brand">EVOLUTION <span>POWER</span></div><div style="color:#666;font-size:13px">${esc(g.direccion||'')}</div></div><div style="text-align:right"><b>${esc(s.nombre)}</b><br><span style="font-size:13px;color:#555">${new Date(s.consent.at).toLocaleDateString('es-CL')}</span></div></div>${consentBody(s,g,s.consent)}`).join('');
+    const sx=window.scrollX,sy=window.scrollY;window.scrollTo(0,0);
+    await html2pdf().set({margin:[10,10,12,10],filename:'Evolution Power - Consentimientos firmados.pdf',image:{type:'jpeg',quality:.95},html2canvas:{scale:2,backgroundColor:'#ffffff',scrollX:0,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:['.report-grid','h4']}}).from(node).save();
+    window.scrollTo(sx,sy);toast('✅ PDF con '+ok.length+' consentimiento(s) descargado');
+  }catch(e){console.error(e);toast('⚠ Error al generar el PDF');}finally{btn.disabled=false;btn.innerHTML=label;}
 }
 function clearConsent(){const id=$('student-form').elements.id.value;if(!id||!confirm('¿Anular la firma de este consentimiento? Tendrá que firmarse de nuevo.'))return;const s=state.students.find(x=>x.id===id);delete s.consent;persist();renderConsentPanel();toast('Firma anulada');}
 
