@@ -486,7 +486,7 @@ td{font-size:13px;color:#edf1f5}
           </form>
         </div>
         <div class="card">
-          <div class="rowhead"><div><h3>Base de alumnos</h3><p class="desc" style="margin:0">Abre la ficha completa para ver y editar todo.</p></div><button class="btn secondary sm" type="button" onclick="openMerge()">🔗 Unificar alumnos</button></div>
+          <div class="rowhead"><div><h3>Base de alumnos</h3><p class="desc" style="margin:0">Abre la ficha completa para ver y editar todo.</p></div><div class="actions"><button class="btn secondary sm" type="button" onclick="pollSignatures(true)">🔄 Revisar firmas</button><button class="btn secondary sm" type="button" onclick="openMerge()">🔗 Unificar alumnos</button></div></div>
           <div id="dup-banner"></div>
           <div class="search"><input id="student-search" placeholder="Buscar alumno..."></div>
           <div class="table-wrap"><table class="rt"><thead><tr><th>Alumno</th><th>Edad</th><th>Objetivo</th><th>Último peso</th><th>Acciones</th></tr></thead><tbody id="student-rows"></tbody></table></div>
@@ -510,7 +510,7 @@ td{font-size:13px;color:#edf1f5}
             <div class="actions"><button class="btn sm secondary" type="button" onclick="$('gsig-file').click()">📷 Subir foto de la firma</button><button class="btn sm danger" type="button" id="gsig-del" onclick="delGymSig()">Quitar</button></div></div>
           <input type="file" id="gsig-file" accept="image/*" class="hide">
           <span class="hint">Foto de la firma en papel blanco con lápiz oscuro. El fondo se elimina solo y aparece en todos los consentimientos.</span></div>
-        <div class="actions" style="margin-top:12px"><button class="btn sm primary" type="button" onclick="saveGym()">Guardar datos del gimnasio</button><button class="btn sm ghost" type="button" onclick="resetConsentText()">↺ Texto predeterminado</button></div>
+        <div class="actions" style="margin-top:12px"><button class="btn sm primary" type="button" onclick="saveGym()">Guardar datos del gimnasio</button><button class="btn sm secondary" type="button" onclick="saveGym();testMail(this);askNotifPerm()">📨 Activar avisos por correo</button><button class="btn sm ghost" type="button" onclick="resetConsentText()">↺ Texto predeterminado</button></div>
         <div class="notice">El texto predeterminado es una base general. Es recomendable que lo revise un abogado antes de usarlo.</div>
       </details>
 </section>
@@ -3326,7 +3326,7 @@ async function consentAction(act,btn){
           <a class="btn secondary" href="mailto:${encodeURIComponent(s.correo)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Abrir en mi app de correo</a>
           ${s.telefono?`<a class="btn green" target="_blank" rel="noopener" href="https://wa.me/${String(s.telefono).replace(/\D/g,'')}?text=${encodeURIComponent(body)}">Enviar por WhatsApp</a>`:''}
           <button class="btn ghost" type="button" onclick="copyText(this.dataset.l)" data-l="${esc(link)}">📋 Copiar link de firma</button>
-        </div><p class="small-note" style="margin-top:12px">El alumno abre el link, firma en su celular y presiona “Enviar firma al gimnasio”. Cuando abras ese link de vuelta, la firma queda guardada sola en su ficha.</p>`);
+        </div><p class="small-note" style="margin-top:12px">Cuando el alumno firme, te llega un correo de confirmación y su ficha se actualiza sola (✍️ Consentimiento firmado) al abrir el sistema.</p>`);
       return;
     }
     openModal(`<div class="modal-head"><div><div class="eyebrow">Firma con QR</div><h3>📱 ${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">El alumno escanea con la cámara de su celular, lee y firma.</p></div><button class="btn sm ghost" type="button" onclick="closeModal()">✕</button></div>
@@ -3339,7 +3339,7 @@ async function consentAction(act,btn){
 }
 function copyText(t){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copiado')).catch(()=>{prompt('Copia el link:',t);});}
 async function signLink(s){
-  const g=gym();const o={i:s.id,fr:s.fechaRegistro||'',n:s.nombre,r:s.rut||'',a:s.edad||'',c:s.condicion||'',m:s.medicamentos||'',l:s.limitaciones||'',g:{n:g.nombre,r:g.rut,p:g.responsable,d:g.direccion,t:g.telefono,e:g.correo}};
+  const g=gym(),nt=notifyCfg();const o={q:nt.topic,k:nt.key,e:s.correo||'',i:s.id,fr:s.fechaRegistro||'',n:s.nombre,r:s.rut||'',a:s.edad||'',c:s.condicion||'',m:s.medicamentos||'',l:s.limitaciones||'',g:{n:g.nombre,r:g.rut,p:g.responsable,d:g.direccion,t:g.telefono,e:g.correo}};
   if(g.texto!==DEFAULT_CONSENT)o.t=g.texto;
   return siteURL()+'#firmar='+(await packObj(o));
 }
@@ -3402,9 +3402,10 @@ function renderSignPage(o){
     const sig=window._pad.strokes.map(st=>st.slice());const code=await signCode({text,name,rut,at,sig});
     const c={name,rut,at,sig,code,text,method:'remoto'};
     const back=siteURL()+'#firma='+(await packObj({i:o.i,n:name,r:rut,at,s:sig,h:code,x:text}));
+    const notif=autoNotify(o,g,{i:o.i,n:name,r:rut,at,s:sig,h:code,x:text},back);
     const subject=`Consentimiento firmado · ${name}`,body=`Hola, envío mi consentimiento informado firmado.\n\nNombre: ${name}\nRUT: ${rut||'—'}\nCódigo: ${code}\n\nLink para registrar la firma en el sistema:\n${back}`;
     $('sp-form').classList.add('hide');
-    $('sp-done').innerHTML=`<div class="card"><h3>✅ ¡Documento firmado!</h3><p class="desc">Último paso: envía la firma al gimnasio y guarda tu copia.</p>
+    $('sp-done').innerHTML=`<div class="card"><h3>✅ ¡Documento firmado!</h3><div id="sp-notif" class="notice" style="margin:0 0 14px">⏳ Enviando confirmación al gimnasio…</div><p class="desc">Guarda tu copia en PDF. Si el aviso automático falla, usa los botones de abajo.</p>
       <div class="verify" style="margin-bottom:14px"><img src="${qrDataURL(verifyText(c,g),3)}" alt="QR" style="background:#fff;border-radius:8px"><div class="small-note">Código de verificación<br><b style="color:#f1d38e;font-size:15px">${code}</b></div></div>
       <div class="actions" style="flex-direction:column;align-items:stretch">
         ${g.correo?`<a class="btn primary" href="mailto:${encodeURIComponent(g.correo)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">📧 Enviar firma al gimnasio por correo</a>`:''}
@@ -3413,6 +3414,10 @@ function renderSignPage(o){
         <button class="btn secondary" type="button" id="sp-pdf">⬇️ Descargar mi copia en PDF</button>
       </div></div>`;
     $('sp-pdf').onclick=()=>consentPDF(c,s,g,$('sp-pdf'));
+    notif.then(r=>{const el=$('sp-notif');if(!el)return;
+      if(r.mail||r.sync){el.style.background='rgba(48,211,139,.1)';el.style.borderColor='rgba(48,211,139,.35)';el.style.color='#9ff3cc';
+        el.innerHTML='✅ Listo: el gimnasio recibió tu firma'+(r.mail?' y le llegó un correo de confirmación'+(o.e?' (con copia a tu correo)':''):'')+'.';}
+      else{el.classList.add('red');el.innerHTML='⚠ No se pudo avisar automáticamente. Envía la firma con uno de los botones de abajo.';}});
   };
 }
 function receiveSignature(o){
@@ -3427,6 +3432,66 @@ function receiveSignature(o){
   $('rs-ok').onclick=()=>{const sid=$('rs-sid').value;if(!sid){toast('Primero registra al alumno');return;}storeConsent(sid,c);closeModal();toast('✅ Firma guardada en la ficha de '+state.students.find(x=>x.id===sid).nombre);};
 }
 window.addEventListener('hashchange',handleHash);
+
+/* --- avisos automáticos de firma --- */
+function notifyCfg(){
+  if(!state.config.notify?.topic){const r=crypto.getRandomValues(new Uint8Array(32)),tp=crypto.getRandomValues(new Uint8Array(15));
+    state.config.notify={topic:'ep-'+b64u(tp).toLowerCase().replace(/[^a-z0-9]/g,'x'),key:b64u(r),since:''};try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+  return state.config.notify;
+}
+async function aesKey(k){return crypto.subtle.importKey('raw',unb64u(k),'AES-GCM',false,['encrypt','decrypt']);}
+async function encStr(k,str){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await aesKey(k),new TextEncoder().encode(str));return 'e'+b64u(iv)+'.'+b64u(new Uint8Array(ct));}
+async function decStr(k,str){const [iv,ct]=str.slice(1).split('.');const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64u(iv)},await aesKey(k),unb64u(ct));return new TextDecoder().decode(pt);}
+async function compactPayload(p){
+  let q={...p};delete q.x;let s=await packObj(q);let sig=p.s;
+  while(s.length>2600&&sig.some(st=>st.length>4)){sig=sig.map(st=>st.length>4?st.filter((_,i)=>i%2===0||i===st.length-1):st);q={...q,s:sig};s=await packObj(q);}
+  return s;
+}
+async function autoNotify(o,g,payload,back){
+  const res={mail:false,sync:false};
+  const jobs=[];
+  if(o.q&&o.k){jobs.push((async()=>{const body=await encStr(o.k,await compactPayload(payload));
+    const r=await fetch('https://ntfy.sh/'+o.q,{method:'POST',body,headers:{'Title':'Firma recibida','Tags':'writing_hand'}});res.sync=r.ok;})().catch(()=>{}));}
+  if(g.correo){jobs.push((async()=>{
+    const r=await fetch('https://formsubmit.co/ajax/'+encodeURIComponent(g.correo),{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({_subject:`✍️ ${payload.n} firmó el consentimiento · ${g.nombre}`,_template:'table',_captcha:'false',...(o.e?{_cc:o.e}:{}),
+        'Alumno':payload.n,'RUT':payload.r||'—','Fecha y hora de firma':new Date(payload.at).toLocaleString('es-CL'),'Código de verificación':payload.h,'Tipo de firma':'Remota (link / QR)',
+        'Registrar en el sistema (solo si no se actualizó solo)':back})});
+    const j=await r.json().catch(()=>({}));res.mail=r.ok&&String(j.success)!=='false';})().catch(()=>{}));}
+  await Promise.all(jobs);return res;
+}
+let polling=false;
+async function pollSignatures(manual){
+  const n=state.config.notify;if(!n?.topic){if(manual)toast('Aún no has enviado links de firma');return;}
+  if(polling)return;polling=true;
+  try{
+    const r=await fetch(`https://ntfy.sh/${n.topic}/json?poll=1&since=${encodeURIComponent(n.since||'12h')}`,{cache:'no-store'});
+    if(!r.ok)throw 0;const lines=(await r.text()).split('\n').filter(Boolean);const got=[];let last=n.since;
+    for(const ln of lines){let ev;try{ev=JSON.parse(ln);}catch(e){continue;}if(ev.event!=='message')continue;last=ev.id;
+      try{const o=await unpackObj(await decStr(n.key,ev.message));const s=state.students.find(x=>x.id===o.i);if(!s)continue;
+        if(s.consent&&s.consent.at>=o.at)continue;
+        const g=gym();const text=o.x||fillConsent(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g);
+        const i=state.students.findIndex(x=>x.id===o.i);state.students[i].consent={name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto'};
+        if(o.r&&!state.students[i].rut)state.students[i].rut=o.r;got.push(o.n);}catch(e){}}
+    state.config.notify.since=last||n.since;
+    if(got.length){persist();renderConsentPanel();toast('✍️ Nueva firma: '+got.join(', '));
+      try{if(window.Notification&&Notification.permission==='granted')new Notification('Evolution Power',{body:'✍️ Firmó el consentimiento: '+got.join(', ')});}catch(e){}}
+    else{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}if(manual)toast('Sin firmas nuevas');}
+  }catch(e){if(manual)toast('⚠ No se pudo revisar (sin conexión)');}
+  finally{polling=false;}
+}
+setInterval(()=>{if(document.visibilityState==='visible'&&!location.hash.startsWith('#firmar='))pollSignatures();},45000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!location.hash.startsWith('#firmar='))pollSignatures();});
+async function testMail(btn){
+  const g=gym();const el=document.querySelector('[data-gym=correo]');const mail=(el?.value||g.correo||'').trim();
+  if(!mail){toast('Escribe primero el correo del gimnasio');el?.focus();return;}
+  btn.disabled=true;
+  try{const r=await fetch('https://formsubmit.co/ajax/'+encodeURIComponent(mail),{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({_subject:'✅ Prueba de avisos de firma · '+g.nombre,_template:'table',_captcha:'false',Mensaje:'Si recibes este correo, los avisos de firma están activos.'})});
+    const j=await r.json().catch(()=>({}));
+    toast(String(j.message||'').toLowerCase().includes('activ')?'📨 Revisa '+mail+' y presiona “Activate Form” (solo la primera vez)':'📨 Correo de prueba enviado a '+mail);}
+  catch(e){toast('⚠ No se pudo enviar la prueba');}finally{btn.disabled=false;}
+}
+function askNotifPerm(){if(window.Notification&&Notification.permission==='default')Notification.requestPermission();}
 
 /* --- PDF consentimiento --- */
 function consentBody(s,g,c,gsig){
@@ -3942,7 +4007,7 @@ $('restore-file').addEventListener('change',e=>{
 
 /* ================= INIT ================= */
 $('eval-date').value=today();
-render();go('dashboard');loadGymForm();renderConsentPanel();handleHash();loadRepoSig();
+render();go('dashboard');loadGymForm();renderConsentPanel();handleHash();loadRepoSig();if(!location.hash.startsWith('#firmar='))setTimeout(pollSignatures,1500);
 loadTemplate(false);setMacroInputs(DEFAULT_MACRO);updateCalc();
 </script>
 </body>
