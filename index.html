@@ -3844,7 +3844,7 @@ function calculate(){
 }
 function bmiCat(b){return b<18.5?'Bajo peso (ref.)':b<25?'Normal (ref.)':b<30?'Sobrepeso (ref.)':'Obesidad (ref.)';}
 ['peso','altura','cintura'].forEach(id=>$(id).addEventListener('input',calculate));
-$('eval-student').addEventListener('change',()=>{const le=lastEval($('eval-student').value);if(le&&!$('altura').value)$('altura').value=le.altura;calculate();});
+$('eval-student').addEventListener('change',()=>{if(!$('eval-id').value){const f=$('eval-form').elements.meta;if(f)f.value=evalsOf($('eval-student').value).length?'Seguimiento':'Control inicial';}const le=lastEval($('eval-student').value);if(le&&!$('altura').value)$('altura').value=le.altura;calculate();});
 
 function renderProgress(){
   const sid=$('eval-student').value;const l=evalsOf(sid);
