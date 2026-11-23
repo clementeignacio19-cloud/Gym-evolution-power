@@ -310,6 +310,11 @@ td{font-size:13px;color:#edf1f5}
 
 /* ===== PROGRESS ===== */
 .spark{width:100%;height:150px;display:block}
+.ev-row{flex-wrap:wrap}
+.ev-edit{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ev-w{width:110px}.ev-w input{width:100%;background:#0b0c0e;border:1px solid #3a3427;color:#fff;border-radius:10px;padding:7px 40px 7px 10px;min-height:38px;font-weight:800}
+.ev-w input:focus{border-color:var(--gold);outline:none}
+@media(max-width:900px){.ev-w input{font-size:16px}}
 .hist-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2025;font-size:13px}
 .delta{font-weight:800;font-size:12px}
 .delta.up{color:#ffb36b}.delta.down{color:#69f2b6}.delta.eq{color:#9aa1ab}
@@ -3848,8 +3853,21 @@ function renderProgress(){
   const first=num(l[0].peso),last=num(l[l.length-1].peso),d=last-first;
   $('progress-desc').innerHTML=`${l.length} control(es) · variación total ${deltaHTML(l.length>1?d:null)}`;
   $('progress-chart').innerHTML=l.length>1?sparkSVG(l.map(e=>num(e.peso)),l.map(e=>fdate(e.fecha))):'';
-  $('progress-list').innerHTML=l.slice().reverse().map((e,i,arr)=>{const prev=arr[i+1];return `<div class="hist-row"><span><b>${fdate(e.fecha)}</b> · <span style="color:#9aa1ab">${esc(e.meta)}</span></span><span>${esc(e.peso)} kg &nbsp;${deltaHTML(prev?num(e.peso)-num(prev.peso):null)} <button class="btn sm ghost icon" style="margin-left:6px" onclick="editEval('${esc(e.id)}')" title="Editar">✏️</button><button class="btn sm danger icon" style="margin-left:4px" onclick="delEval('${esc(e.id)}')" title="Eliminar">🗑</button></span></div>`;}).join('');
+  const dupDays=l.filter((e,i)=>l.findIndex(x=>x.fecha===e.fecha)!==i).length;
+  $('progress-list').innerHTML=(dupDays?`<div class="notice" style="margin:4px 0 10px">⚠ Hay ${dupDays+1>2?'varias evaluaciones':'2 evaluaciones'} con la misma fecha. Si una fue un error, elimínala con 🗑.</div>`:'')
+   +`<div class="small-note" style="margin:6px 0 4px">✏️ Cambia el peso directo en la casilla y se guarda solo. Para editar todo, usa “Editar”.</div>`
+   +l.slice().reverse().map((e,i,arr)=>{const prev=arr[i+1];return `<div class="hist-row ev-row"><span><b>${fdate(e.fecha)}</b> · <span style="color:#9aa1ab">${esc(e.meta)}</span><br>${deltaHTML(prev?num(e.peso)-num(prev.peso):null)}</span>
+     <span class="ev-edit"><span class="input-unit ev-w"><input type="number" inputmode="decimal" step="0.1" min="20" value="${esc(e.peso)}" data-evw="${esc(e.id)}" aria-label="Peso"><em>kg</em></span>
+     <button class="btn sm secondary" type="button" onclick="editEval('${esc(e.id)}')">✏️ Editar</button><button class="btn sm danger icon" type="button" onclick="delEval('${esc(e.id)}')" title="Eliminar">🗑</button></span></div>`;}).join('');
 }
+$('progress-list').addEventListener('change',e=>{
+  const id=e.target.dataset.evw;if(!id)return;const v=num(e.target.value);const ev=state.evals.find(x=>x.id===id);if(!ev)return;
+  if(!(v>=20&&v<=400)){toast('Peso no válido');e.target.value=ev.peso;return;}
+  const old=ev.peso;ev.peso=String(Math.round(v*10)/10);persist();renderProgress();
+  if($('eval-id').value===id)$('peso').value=ev.peso;
+  toast(`✅ Peso actualizado: ${old} → ${ev.peso} kg (${fdate(ev.fecha)})`);
+});
+$('progress-list').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset.evw){e.preventDefault();e.target.blur();}});
 function sparkSVG(vals,labels){
   const W=600,H=150,p=22,min=Math.min(...vals)-0.5,max=Math.max(...vals)+0.5;
   const x=i=>p+i*(W-2*p)/(vals.length-1),y=v=>H-p-(v-min)/(max-min)*(H-2*p);
@@ -3877,6 +3895,8 @@ function delEval(id){if(!confirm('¿Eliminar esta evaluación?'))return;const si
 $('eval-form').addEventListener('submit',e=>{
   e.preventDefault();if(!$('eval-student').value){toast('Primero selecciona un alumno');return;}
   const d=Object.fromEntries(new FormData(e.target).entries());if(!(num(d.peso)>0&&num(d.altura)>0)){toast('Revisa peso y estatura');return;}
+  if(!d.id){const same=state.evals.find(x=>x.studentId===$('eval-student').value&&x.fecha===d.fecha);
+    if(same&&confirm(`Este alumno ya tiene una evaluación el ${fdate(d.fecha)} (${same.peso} kg).\n\nAceptar = actualizar esa evaluación\nCancelar = crear una nueva igual`))d.id=same.id;}
   const editing=d.id&&state.evals.some(x=>x.id===d.id);
   d.studentId=$('eval-student').value;
   if(editing){const i=state.evals.findIndex(x=>x.id===d.id);state.evals[i]={...state.evals[i],...d};}else{d.id=uid();state.evals.push(d);}
