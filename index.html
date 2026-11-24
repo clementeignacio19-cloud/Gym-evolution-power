@@ -297,6 +297,7 @@ td{font-size:13px;color:#edf1f5}
 .report-logo{width:40px;height:40px;border-radius:10px;vertical-align:middle;margin-right:10px;object-fit:cover}
 .hello{align-items:center}.hello-logo{width:56px;height:56px;border-radius:16px;object-fit:cover;border:1px solid #2c2a24;flex:none}
 .m-save{display:none}
+.btn.wa{background:linear-gradient(135deg,#3ee07f,#1fae5b);color:#05170c}
 @media (max-width:900px){
   .mhead{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:8px}
   .mhead .brand{gap:9px;min-width:0}.mhead .brand-logo{width:38px;height:38px;border-radius:11px}
@@ -631,7 +632,7 @@ td{font-size:13px;color:#edf1f5}
               <label class="consent-check" id="consent-sig-view"></label>
               <div class="actions" style="margin-top:12px">
                 <button class="btn sm green" type="button" onclick="consentAction('sign')">✍️ Firmar aquí</button>
-                <button class="btn sm primary" type="button" onclick="consentAction('mail')">📧 Enviar por correo</button>
+                <button class="btn sm wa" type="button" onclick="consentAction('wa')">💬 Enviar por WhatsApp</button><button class="btn sm primary" type="button" onclick="consentAction('mail')">📧 Enviar por correo</button>
                 <button class="btn sm secondary" type="button" onclick="consentAction('qr')">📱 Firmar con QR</button>
                 <button class="btn sm secondary" type="button" onclick="consentAction('pdf',this)">⬇️ Descargar PDF</button>
                 <button class="btn sm ghost" type="button" onclick="consentAction('print')">🖨️ Imprimir</button>
@@ -3594,6 +3595,15 @@ function saveStudentKeep(){
 async function consentAction(act,btn,sid){
   const s=sid?state.students.find(x=>x.id===sid):saveStudentKeep();if(!s)return;const g=gym();
   if(act==='sign')return openSignModal(s.id);
+  if(act==='wa'){
+    const ph=String(s.telefono||'').replace(/\D/g,'');
+    if(ph.length<8){toast('Agrega el teléfono del alumno en la ficha (ej. +56 9 1234 5678)');if($('student-form').elements.telefono){$('student-form-card')?.classList.remove('hide');$('student-form').elements.telefono.focus();}return;}
+    const num=ph.length===9&&ph[0]==='9'?'56'+ph:ph;
+    const link=await signLink(s);
+    const msg=`Hola ${s.nombre.split(' ')[0]} 👋\n\nBienvenido/a a ${g.nombre}. Para completar tu inscripción, revisa y firma el consentimiento desde tu celular aquí:\n\n${link}\n\n¡Gracias! 💪`;
+    const i=state.students.findIndex(x=>x.id===s.id);state.students[i].consentSent=new Date().toISOString();addNotif({type:'enviado',sid:s.id,title:`Consentimiento enviado a ${s.nombre}`,text:'Link de firma enviado por WhatsApp.',read:true});persist();renderConsentPanel();
+    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');return;
+  }
   if(act==='qr'||act==='mail'){
     const link=await signLink(s);
     if(act==='mail'){
@@ -3740,7 +3750,7 @@ function renderFirmas(){
       <div class="actions"><button class="btn sm secondary" type="button" onclick="viewConsent('${id}')">👁 Ver</button><button class="btn sm primary" type="button" onclick="downloadPDF('${id}','consentimiento',null,this)">⬇️ PDF</button></div></div>`;
     return `<div class="cf-card"><div class="cf-top"><div><b>${esc(s.nombre)}</b><div class="small-note">RUT ${esc(s.rut||'—')}${s.correo?' · '+esc(s.correo):''}</div></div>${s.consentSent?'<span class="tag gold">📧 Enviado</span>':'<span class="tag red">Pendiente</span>'}</div>
       <div class="cf-meta">${s.consentSent?'Link enviado el '+new Date(s.consentSent).toLocaleString('es-CL'):'Aún no se ha enviado el consentimiento.'}</div>
-      <div class="actions"><button class="btn sm green" type="button" onclick="openSignModal('${id}')">✍️ Firmar aquí</button><button class="btn sm primary" type="button" onclick="consentAction('mail',this,'${id}')">📧 Enviar</button><button class="btn sm secondary" type="button" onclick="consentAction('qr',this,'${id}')">📱 QR</button></div></div>`;
+      <div class="actions"><button class="btn sm green" type="button" onclick="openSignModal('${id}')">✍️ Firmar aquí</button><button class="btn sm wa" type="button" onclick="consentAction('wa',this,'${id}')">💬 WhatsApp</button><button class="btn sm primary" type="button" onclick="consentAction('mail',this,'${id}')">📧 Correo</button><button class="btn sm secondary" type="button" onclick="consentAction('qr',this,'${id}')">📱 QR</button></div></div>`;
   }).join(''):`<div class="empty" style="grid-column:1/-1">${all.length?'Sin resultados.':'Aún no hay alumnos registrados.'}</div>`;
 }
 function viewConsent(sid){
