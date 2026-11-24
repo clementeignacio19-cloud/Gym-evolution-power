@@ -226,6 +226,11 @@ td{font-size:13px;color:#edf1f5}
 .cf-sigs small{position:absolute;bottom:3px;left:0;right:0;text-align:center;color:#888;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
 .cf-meta{font-size:12px;color:#a4a9b3;line-height:1.5}
 .cf-meta b{color:#f1d38e}
+.login{position:fixed;inset:0;z-index:300;background:radial-gradient(circle at top,#17181b,#050505 70%);display:grid;place-items:center;padding:20px}
+.login-box{width:100%;max-width:400px;background:linear-gradient(180deg,#121316,#0b0b0d);border:1px solid #2c2e35;border-radius:24px;padding:26px;box-shadow:var(--shadow)}
+.cloud-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;padding:6px 10px;border-radius:999px;background:#101114;border:1px solid #24262b;color:#9ff3cc;cursor:default;white-space:nowrap}
+.cloud-badge[data-st=err]{color:#ffb3b3;border-color:rgba(255,107,107,.35)}
+.cloud-badge[data-st=sync]{color:#f1d38e}
 .consent-panel{margin-top:18px;padding:16px;border-radius:18px;border:1px solid #3a3427;background:linear-gradient(180deg,#121110,#0c0c0d)}
 .consent-text{max-height:220px;overflow:auto;white-space:pre-wrap;font-size:12.5px;line-height:1.55;color:#d9dce2;background:#0b0c0e;border:1px solid #24262b;border-radius:13px;padding:12px 14px}
 .consent-check{display:block;margin-top:10px}
@@ -420,18 +425,28 @@ td{font-size:13px;color:#edf1f5}
 </head>
 <body>
 <div id="sign-page" class="sign-page hide"></div>
+<div id="login" class="login hide"><form class="login-box" onsubmit="doLogin(event)">
+  <div class="brand" style="justify-content:center;margin-bottom:6px"><div class="brand-badge">EP</div><div><h1>EVOLUTION POWER</h1><small>Sistema del gimnasio</small></div></div>
+  <h3 style="margin:18px 0 4px;text-align:center">Iniciar sesión</h3><p class="desc" style="text-align:center">Tus alumnos quedan guardados en la nube ☁️</p>
+  <div class="field"><label>Correo</label><input id="lg-email" type="email" autocomplete="username" required></div>
+  <div class="field" style="margin-top:10px"><label>Contraseña</label><input id="lg-pass" type="password" autocomplete="current-password" required></div>
+  <div class="notice red hide" id="lg-msg"></div>
+  <button class="btn primary" id="lg-btn" type="submit" style="width:100%;margin-top:14px">Entrar</button>
+  <button class="btn ghost sm" type="button" style="width:100%;margin-top:10px" onclick="useOffline()">Seguir sin conexión (solo este navegador)</button>
+</form></div>
 <div class="app">
   <aside class="sidebar">
     <div class="brand"><div class="brand-badge">EP</div><div><h1>EVOLUTION POWER</h1><small>Nutrition · Training · Performance</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sidebar-card"><h3>💾 Respaldo</h3><p style="margin-bottom:10px">Los datos se guardan en este navegador. Descarga un respaldo seguido.</p>
       <div class="actions"><button class="btn sm secondary" onclick="backup()">Descargar</button><button class="btn sm ghost" onclick="openRecovery()">Restaurar</button></div></div>
+    <div class="sidebar-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px"><span class="cloud-badge" data-cloud>☁️</span><button class="btn sm ghost" type="button" onclick="CLOUD.session?logout():showLogin()" title="Sesión">👤</button></div>
     <div class="sidebar-foot">Evolution Power · Laguna Verde / Valparaíso</div>
   </aside>
 
   <header class="mhead">
     <div class="brand"><div class="brand-badge">EP</div><div><h1>EVOLUTION POWER</h1><small>Nutrition · Training · Performance</small></div></div>
-    <div class="actions" style="flex-wrap:nowrap"><button class="btn sm secondary bell" onclick="go('notifs')" title="Notificaciones">🔔<span class="nbadge hide" data-nbadge></span></button><button class="btn sm secondary" onclick="backup()" title="Descargar respaldo">💾</button></div>
+    <div class="actions" style="flex-wrap:nowrap"><span class="cloud-badge" data-cloud style="font-size:10px;padding:5px 8px" onclick="CLOUD.session?logout():showLogin()">☁️</span><button class="btn sm secondary bell" onclick="go('notifs')" title="Notificaciones">🔔<span class="nbadge hide" data-nbadge></span></button><button class="btn sm secondary" onclick="backup()" title="Descargar respaldo">💾</button></div>
   </header>
 
   <main class="main">
@@ -3108,7 +3123,7 @@ function saveLocal(){
     if(!state.students.length&&prev){try{const o=JSON.parse(prev);if(Array.isArray(o.students)&&o.students.length&&!window._allowEmpty){return false;}}catch(e){}}
     const js=JSON.stringify(state);localStorage.setItem(KEY,js);
     if(state.students.length)localStorage.setItem(KEY+'_auto',js);else if(window._allowEmpty)localStorage.removeItem(KEY+'_auto');
-    idbBackup(js);return true;
+    idbBackup(js);try{cloudQueue();}catch(e){}return true;
   }catch(e){toast('No se pudo guardar en este navegador.');return false;}
 }
 function persist(){saveLocal();render();}
@@ -3681,7 +3696,7 @@ async function autoNotify(o,g,payload,back){
   const res={mail:false,sync:false};
   const jobs=[];
   if(o.q&&o.k){jobs.push((async()=>{const body=await encStr(o.k,await compactPayload(payload));
-    let ok=false;for(let a=0;a<3&&!ok;a++){try{const r=await fetch('https://ntfy.sh/'+o.q,{method:'POST',body});ok=r.ok;}catch(e){}if(!ok)await new Promise(z=>setTimeout(z,1200));}res.sync=ok;})().catch(()=>{}));}
+    let ok=await sendSignatureToCloud(payload,body);if(ok){res.sync=true;return;}for(let a=0;a<3&&!ok;a++){try{const r=await fetch('https://ntfy.sh/'+o.q,{method:'POST',body});ok=r.ok;}catch(e){}if(!ok)await new Promise(z=>setTimeout(z,1200));}res.sync=ok;})().catch(()=>{}));}
   if(g.correo){jobs.push((async()=>{
     const fd=new FormData();const add=(k,v)=>fd.append(k,v);
     add('_subject',`✍️ ${payload.n} firmó el consentimiento · ${g.nombre}`);add('_template','table');add('_captcha','false');if(o.e)add('_cc',o.e);
@@ -3710,6 +3725,12 @@ function checkWatch(){
     <div class="actions" style="justify-content:center;margin-top:10px"><button class="btn sm primary" type="button" onclick="downloadPDF('${esc(sid)}','consentimiento',null,this)">⬇️ PDF</button><button class="btn sm secondary" type="button" onclick="closeModal()">Listo</button></div></div>`;
 }
 function resolveDupSilent(id){const n=state.notifs.find(x=>x.id===id);if(!n)return;const i=state.students.findIndex(x=>x.id===n.sid);if(i>-1&&n.c){state.students[i].consent=n.c;n.resolved='Se usó la firma nueva (firmó con QR en presencia)';n.read=true;persist();renderConsentPanel();}}
+async function handleSigCipher(key,cipher){
+  const o=await unpackObj(await decStr(key,cipher));const s=findStudentFor(o);
+  if(!s){if(!(state.notifs||[]).some(x=>x.type==='huerfana'&&x.o?.h===o.h)){addNotif({type:'huerfana',title:`Firma recibida de ${o.n}`,text:`No encontré su ficha (RUT ${o.r||'—'}). Asígnala a un alumno o créalo.`,o});return {r:'nuevo',name:o.n};}return {r:'igual',name:o.n};}
+  o.i=s.id;const g=gym();const text=o.x||fillConsent(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g);
+  return {r:registerSignature(o.i,{name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto'},'remoto'),name:o.n};
+}
 let polling=false;
 async function pollSignatures(manual,fromWatch){
   const n=state.config.notify;if(!n?.topic){if(manual)toast('Aún no has enviado links de firma');return;}
@@ -3718,13 +3739,11 @@ async function pollSignatures(manual,fromWatch){
 }
 async function pollCore(manual){const n=state.config.notify;
   try{
-    const r=await fetch(`https://ntfy.sh/${n.topic}/json?poll=1&since=${encodeURIComponent(n.since||'12h')}`,{cache:'no-store'});
-    if(!r.ok)throw 0;const lines=(await r.text()).split('\n').filter(Boolean);const got=[],dups=[];let last=n.since;
+    let lines=[];try{const r=await fetch(`https://ntfy.sh/${n.topic}/json?poll=1&since=${encodeURIComponent(n.since||'12h')}`,{cache:'no-store'});if(r.ok)lines=(await r.text()).split('\n').filter(Boolean);else if(!CLOUD.ready)throw 0;}catch(e){if(!CLOUD.ready)throw e;}
+    const got=[],dups=[];let last=n.since;
     for(const ln of lines){let ev;try{ev=JSON.parse(ln);}catch(e){continue;}if(ev.event!=='message')continue;last=ev.id;
-      try{const o=await unpackObj(await decStr(n.key,ev.message));const s=findStudentFor(o);if(!s){if(!(state.notifs||[]).some(x=>x.type==='huerfana'&&x.o?.h===o.h)){addNotif({type:'huerfana',title:`Firma recibida de ${o.n}`,text:`No encontré su ficha en este equipo (RUT ${o.r||'—'}). Asígnala a un alumno o créalo.`,o});got.push(o.n);}continue;}o.i=s.id;
-        const g=gym();const text=o.x||fillConsent(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g);
-        const r=registerSignature(o.i,{name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto'},'remoto');
-        if(r==='nuevo')got.push(o.n);else if(r==='dup')dups.push(o.n);}catch(e){}}
+      try{const st=await handleSigCipher(n.key,ev.message);if(st.r==='nuevo')got.push(st.name);else if(st.r==='dup')dups.push(st.name);}catch(e){}}
+    {const c=await cloudInbox();got.push(...c.got);dups.push(...c.dups);}
     state.config.notify.since=last||n.since;
     if(dups.length){persist();toast('⚠️ Firma duplicada: '+dups.join(', ')+' — revisa Notificaciones');try{if(window.Notification&&Notification.permission==='granted')new Notification('Evolution Power',{body:'⚠️ Firmó dos veces: '+dups.join(', ')});}catch(e){}}
     if(got.length){persist();renderConsentPanel();toast('✍️ Nueva firma: '+got.join(', '));
@@ -4273,9 +4292,179 @@ $('restore-file').addEventListener('change',e=>{
   rd.readAsText(f);e.target.value='';
 });
 
+/* ================= NUBE · SUPABASE ================= */
+const SB_URL='https://vuyynmzbywpuumvtqfzl.supabase.co';
+const SB_KEY='sb_publishable_2XuDlw3mTsWpygDD5gxocg_XTKT5Swa';
+const SESS_KEY='ep_sb_session';
+const CLOUD={session:null,map:{},lastPull:null,pushT:null,pulling:false,pushing:false,ready:false,offline:false,lastSync:null,error:''};
+try{CLOUD.session=JSON.parse(localStorage.getItem(SESS_KEY)||'null');}catch(e){}
+try{const m=JSON.parse(localStorage.getItem(SESS_KEY+'_map')||'null');if(m){CLOUD.map=m.map||{};CLOUD.lastPull=m.lastPull||null;}}catch(e){}
+function saveCloudMeta(){try{localStorage.setItem(SESS_KEY+'_map',JSON.stringify({map:CLOUD.map,lastPull:CLOUD.lastPull}));}catch(e){}}
+const sbHeaders=(auth=true,extra={})=>({apikey:SB_KEY,...(auth&&CLOUD.session?{Authorization:'Bearer '+CLOUD.session.access_token}:{}),...extra});
+async function sbAuth(grant,body){
+  const r=await fetch(`${SB_URL}/auth/v1/token?grant_type=${grant}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('Error '+r.status));
+  CLOUD.session={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Date.now()+(j.expires_in||3600)*1000,email:j.user?.email||CLOUD.session?.email||''};
+  try{localStorage.setItem(SESS_KEY,JSON.stringify(CLOUD.session));}catch(e){}
+  return CLOUD.session;
+}
+async function sbEnsureToken(){
+  if(!CLOUD.session)return false;
+  if(Date.now()<CLOUD.session.expires_at-60000)return true;
+  try{await sbAuth('refresh_token',{refresh_token:CLOUD.session.refresh_token});return true;}
+  catch(e){CLOUD.session=null;try{localStorage.removeItem(SESS_KEY);}catch(_){}showLogin('Tu sesión expiró. Vuelve a entrar.');return false;}
+}
+async function sbFetch(path,opt={},auth=true){
+  if(auth&&!(await sbEnsureToken()))throw new Error('sin sesión');
+  const r=await fetch(SB_URL+path,{...opt,headers:sbHeaders(auth,opt.headers||{})});
+  if(r.status===401&&auth){CLOUD.session.expires_at=0;if(await sbEnsureToken())return sbFetch(path,opt,auth);}
+  if(!r.ok){const t=await r.text().catch(()=>'');throw new Error('HTTP '+r.status+' '+t.slice(0,160));}
+  return r;
+}
+/* --- transformar estado <-> filas --- */
+function stateRows(){
+  const rows=[];
+  state.students.forEach(x=>rows.push(['students',x.id,x]));
+  state.evals.forEach(x=>rows.push(['evals',x.id,x]));
+  state.plans.forEach(x=>rows.push(['plans',x.studentId,x]));
+  state.workouts.forEach(x=>rows.push(['workouts',x.studentId,x]));
+  (state.notifs||[]).forEach(x=>rows.push(['notifs',x.id,x]));
+  rows.push(['config','main',state.config||{}]);
+  return rows;
+}
+function applyRow(kind,id,data,deleted){
+  if(kind==='config'){if(!deleted){state.config=data||{};}return;}
+  const key=(kind==='plans'||kind==='workouts')?'studentId':'id';
+  const arr=kind==='notifs'?(state.notifs=state.notifs||[]):state[kind];if(!arr)return;
+  const i=arr.findIndex(x=>x[key]===id);
+  if(deleted){if(i>-1)arr.splice(i,1);return;}
+  if(i>-1)arr[i]=data;else arr.push(data);
+}
+/* --- subir cambios --- */
+function cloudQueue(){if(!CLOUD.session||!CLOUD.ready)return;clearTimeout(CLOUD.pushT);CLOUD.pushT=setTimeout(cloudPush,700);setCloudBadge('sync');}
+async function cloudPush(){
+  if(!CLOUD.session||!CLOUD.ready)return;
+  if(CLOUD.pushing){CLOUD.pushT=setTimeout(cloudPush,800);return;}
+  CLOUD.pushing=true;
+  try{
+    const now=stateRows(),seen=new Set(),up=[];
+    now.forEach(([k,id,d])=>{const key=k+'|'+id;seen.add(key);const js=JSON.stringify(d);if(CLOUD.map[key]!==js)up.push({kind:k,id:String(id),data:d,deleted:false,_js:js,_key:key});});
+    Object.keys(CLOUD.map).forEach(key=>{if(!seen.has(key)&&CLOUD.map[key]!==null){const [k,...r]=key.split('|');up.push({kind:k,id:r.join('|'),data:{},deleted:true,_js:null,_key:key});}});
+    for(let i=0;i<up.length;i+=200){
+      const chunk=up.slice(i,i+200);
+      await sbFetch('/rest/v1/ep_records?on_conflict=kind,id',{method:'POST',headers:{'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify(chunk.map(({kind,id,data,deleted})=>({kind,id,data,deleted,updated_at:new Date().toISOString()})))});
+      chunk.forEach(r=>{if(r.deleted)delete CLOUD.map[r._key];else CLOUD.map[r._key]=r._js;});
+    }
+    saveCloudMeta();CLOUD.lastSync=Date.now();CLOUD.error='';setCloudBadge('ok');
+  }catch(e){CLOUD.error=String(e.message||e);setCloudBadge('err');console.warn('push',e);CLOUD.pushT=setTimeout(cloudPush,15000);}
+  finally{CLOUD.pushing=false;}
+}
+/* --- bajar cambios --- */
+async function cloudPull(full){
+  if(!CLOUD.session||CLOUD.pulling)return 0;CLOUD.pulling=true;
+  try{
+    const since=!full&&CLOUD.lastPull?`&updated_at=gt.${encodeURIComponent(CLOUD.lastPull)}`:'';
+    const r=await sbFetch(`/rest/v1/ep_records?select=kind,id,data,deleted,updated_at${since}&order=updated_at.asc&limit=10000`);
+    const rows=await r.json();let n=0;
+    const pending=new Set();if(!full)stateRows().forEach(([k,id,d])=>{const key=k+'|'+id;if(CLOUD.map[key]!==undefined&&CLOUD.map[key]!==JSON.stringify(d))pending.add(key);});
+    rows.forEach(row=>{const key=row.kind+'|'+row.id;
+      if(pending.has(key))return; /* cambio local aún no subido: gana el local */
+      const js=row.deleted?null:JSON.stringify(row.data);
+      if(!full&&CLOUD.map[key]===js)return;
+      applyRow(row.kind,row.id,row.data,row.deleted);if(row.deleted)delete CLOUD.map[key];else CLOUD.map[key]=js;n++;
+      if(!CLOUD.lastPull||row.updated_at>CLOUD.lastPull)CLOUD.lastPull=row.updated_at;});
+    if(rows.length&&rows[rows.length-1].updated_at>(CLOUD.lastPull||''))CLOUD.lastPull=rows[rows.length-1].updated_at;
+    saveCloudMeta();
+    if(n){saveLocal();buildPlanTypes&&buildPlanTypes();render();renderConsentPanel&&renderConsentPanel();loadGymForm&&loadGymForm();}
+    CLOUD.lastSync=Date.now();CLOUD.error='';setCloudBadge('ok');return n;
+  }catch(e){CLOUD.error=String(e.message||e);setCloudBadge('err');console.warn('pull',e);return 0;}
+  finally{CLOUD.pulling=false;}
+}
+/* --- primera conexión: unir datos del navegador con la nube --- */
+async function cloudStart(){
+  CLOUD.ready=false;setCloudBadge('sync');
+  const local=JSON.parse(JSON.stringify(state));
+  const r=await sbFetch('/rest/v1/ep_records?select=kind,id,data,deleted,updated_at&order=updated_at.asc&limit=10000');
+  const rows=await r.json();
+  const cloudKeys=new Set(rows.filter(x=>!x.deleted).map(x=>x.kind+'|'+x.id));
+  const hadCloud=rows.some(x=>!x.deleted&&x.kind==='students');
+  /* cambios hechos en este navegador desde la última sincronización (ganan sobre la nube) */
+  const prevMap=CLOUD.map||{};const localEdited=new Set(),localDeleted=new Set();
+  {const lk=new Set();const b=state;state=local;stateRows().forEach(([k,id,d])=>{const key=k+'|'+id;lk.add(key);if(prevMap[key]!==undefined&&prevMap[key]!==JSON.stringify(d))localEdited.add(key);});state=b;
+   Object.keys(prevMap).forEach(key=>{if(!lk.has(key))localDeleted.add(key);});}
+  /* aplicar nube */
+  CLOUD.map={};
+  rows.forEach(row=>{if(row.deleted)return;const key=row.kind+'|'+row.id;const js=JSON.stringify(row.data);
+    if(localDeleted.has(key)&&prevMap[key]===js){CLOUD.map[key]=js;applyRow(row.kind,row.id,null,true);return;} /* lo borraste sin conexión */
+    applyRow(row.kind,row.id,row.data,false);CLOUD.map[key]=js;
+    if(!CLOUD.lastPull||row.updated_at>CLOUD.lastPull)CLOUD.lastPull=row.updated_at;});
+  /* agregar lo que solo existe en este navegador */
+  let added=0;const before=state;state=local;const localRows=stateRows();state=before;
+  localRows.forEach(([k,id,d])=>{const key=k+'|'+id;if(k==='config'){if(!hadCloud){state.config={...d,...(rows.find(x=>x.kind==='config')?.data||{})};}return;}
+    if(!cloudKeys.has(key)||localEdited.has(key)){applyRow(k,id,d,false);if(!cloudKeys.has(key))added++;}});
+  CLOUD.ready=true;saveCloudMeta();saveLocal();
+  try{buildPlanTypes();}catch(e){}render();try{renderConsentPanel();loadGymForm();}catch(e){}
+  await cloudPush();
+  const ns=state.students.length;
+  toast(added?`☁️ Conectado. Se subieron ${added} registro(s) de este navegador · ${ns} alumno(s) en la nube`:`☁️ Conectado a la nube · ${ns} alumno(s)`);
+}
+/* --- bandeja de firmas en Supabase --- */
+async function cloudInbox(){
+  if(!CLOUD.session||!CLOUD.ready)return {got:[],dups:[]};
+  const res={got:[],dups:[]};const key=state.config.notify?.key;if(!key)return res;
+  try{
+    const r=await sbFetch('/rest/v1/ep_firmas?select=id,payload,created_at&processed=eq.false&order=created_at.asc&limit=200');
+    const items=await r.json();
+    for(const it of items){let st=null;try{st=await handleSigCipher(key,it.payload);}catch(e){continue;}
+      if(st.r==='nuevo')res.got.push(st.name);else if(st.r==='dup')res.dups.push(st.name);await sbFetch('/rest/v1/ep_firmas?id=eq.'+it.id,{method:'PATCH',headers:{'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({processed:true})}).catch(()=>{});}
+  }catch(e){console.warn('inbox',e);}
+  return res;
+}
+async function sendSignatureToCloud(o,cipher){
+  for(let a=0;a<3;a++){
+    try{const r=await fetch(SB_URL+'/rest/v1/ep_firmas',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({student_id:String(o.i||''),payload:cipher})});if(r.ok)return true;}catch(e){}
+    await new Promise(z=>setTimeout(z,1200));
+  }
+  return false;
+}
+/* --- interfaz: login y estado --- */
+function setCloudBadge(st){
+  const el=document.querySelectorAll('[data-cloud]');if(!el.length)return;
+  const t=!CLOUD.session?'💾 Solo este navegador':st==='sync'?'☁️ Sincronizando…':st==='err'?'⚠️ Sin conexión a la nube':'☁️ En la nube';
+  el.forEach(x=>{x.textContent=t;x.title=CLOUD.error||(CLOUD.session?.email?'Sesión: '+CLOUD.session.email:'');x.dataset.st=st||'';});
+}
+function showLogin(msg){
+  if(location.hash.startsWith('#firmar='))return;
+  $('login').classList.remove('hide');$('lg-msg').textContent=msg||'';$('lg-msg').classList.toggle('hide',!msg);
+  setTimeout(()=>$('lg-email').focus(),100);
+}
+async function doLogin(e){
+  e&&e.preventDefault();const btn=$('lg-btn');btn.disabled=true;btn.textContent='Entrando…';$('lg-msg').classList.add('hide');
+  try{await sbAuth('password',{email:$('lg-email').value.trim(),password:$('lg-pass').value});
+    $('login').classList.add('hide');$('lg-pass').value='';await cloudStart();}
+  catch(err){$('lg-msg').textContent=/invalid/i.test(err.message)?'Correo o contraseña incorrectos.':'No se pudo entrar: '+err.message;$('lg-msg').classList.remove('hide');}
+  finally{btn.disabled=false;btn.textContent='Entrar';}
+}
+function useOffline(){CLOUD.offline=true;$('login').classList.add('hide');setCloudBadge();toast('Modo sin conexión: los datos quedan solo en este navegador');}
+async function logout(){
+  if(!confirm('¿Cerrar sesión? Los datos quedan guardados en la nube.'))return;
+  try{await sbFetch('/auth/v1/logout',{method:'POST'});}catch(e){}
+  CLOUD.session=null;CLOUD.ready=false;try{localStorage.removeItem(SESS_KEY);}catch(e){}setCloudBadge();showLogin('Sesión cerrada.');
+}
+setInterval(async()=>{if(CLOUD.session&&CLOUD.ready&&document.visibilityState==='visible'&&!location.hash.startsWith('#firmar=')){await cloudPull();}},12000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CLOUD.session&&CLOUD.ready)cloudPull();});
+async function cloudBoot(){
+  if(location.hash.startsWith('#firmar='))return;
+  setCloudBadge();
+  if(CLOUD.session){try{if(await sbEnsureToken())await cloudStart();}catch(e){CLOUD.error=String(e.message||e);setCloudBadge('err');CLOUD.ready=false;toast('⚠️ No se pudo conectar a la nube. Trabajando con los datos de este navegador.');setTimeout(cloudBoot,30000);}}
+  else showLogin();
+}
+
 /* ================= INIT ================= */
 $('eval-date').value=today();
-render();go('dashboard');setTimeout(()=>{if(!STORAGE_OK)toast('⚠ No se pudieron leer los datos guardados. No se sobrescribió nada: usa 🛟 Recuperar.');else if(window._recoveredFromAuto){saveLocal();toast('🛟 Datos recuperados desde la copia automática');}else if(state.students.length){const lb=state.config.lastBackup;if(!lb||Date.now()-Date.parse(lb)>7*864e5)toast('💾 Hace más de 7 días que no descargas un respaldo. Hazlo desde 💾 Respaldo.');}},900);loadGymForm();renderConsentPanel();handleHash();loadRepoSig();if(!location.hash.startsWith('#firmar='))setTimeout(pollSignatures,1500);
+render();go('dashboard');setTimeout(()=>{if(!STORAGE_OK)toast('⚠ No se pudieron leer los datos guardados. No se sobrescribió nada: usa 🛟 Recuperar.');else if(window._recoveredFromAuto){saveLocal();toast('🛟 Datos recuperados desde la copia automática');}else if(state.students.length){const lb=state.config.lastBackup;if(!lb||Date.now()-Date.parse(lb)>7*864e5)toast('💾 Hace más de 7 días que no descargas un respaldo. Hazlo desde 💾 Respaldo.');}},900);loadGymForm();renderConsentPanel();handleHash();loadRepoSig();if(!location.hash.startsWith('#firmar='))setTimeout(pollSignatures,1500);cloudBoot();
 loadTemplate(false);setMacroInputs(DEFAULT_MACRO);updateCalc();
 </script>
 </body>
