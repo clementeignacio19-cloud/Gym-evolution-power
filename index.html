@@ -603,6 +603,13 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
 .send-grid .btn{justify-content:center;gap:7px;min-height:44px;white-space:nowrap}
 .send-grid .btn .bi{color:var(--gold)}
 @media(max-width:560px){.send-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ssearch{position:relative}
+.suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:#1c1c1c;border:1px solid #343434;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.55);max-height:min(60vh,420px);overflow:auto;padding:6px}
+.sg-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-radius:9px;padding:9px 10px;color:var(--text);cursor:pointer;font:inherit}
+.sg-item:hover,.sg-item.on{background:#262626}
+.sg-item .avatar.sm{width:34px;height:34px;font-size:13px;border-radius:8px}
+.sg-t{display:flex;flex-direction:column;min-width:0}.sg-t b{font-weight:600}.sg-t small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg-empty{padding:12px;color:var(--muted)}.sg-foot{padding:7px 10px 3px;color:#7a7a74;font-size:12px;border-top:1px solid #2b2b2b;margin-top:4px}
 </style>
 </head>
 <body>
@@ -679,7 +686,7 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
           <div class="actions"><button class="btn primary" type="button" onclick="newStudent()">Nuevo alumno</button><button class="btn secondary sm" type="button" onclick="pollSignatures(true)">Firmas</button><button class="btn secondary sm" type="button" onclick="openMerge()">Unificar</button><button class="btn secondary sm" type="button" onclick="openTrash()">Papelera</button></div></div>
         <div id="dup-banner"></div>
         <div class="sl-tools">
-          <div class="search" style="margin:0"><input id="student-search" placeholder="Buscar por nombre, RUT, teléfono u objetivo..."></div>
+          <div class="search ssearch" style="margin:0"><input id="student-search" autocomplete="off" placeholder="Buscar por nombre, RUT, teléfono u objetivo..." role="combobox" aria-expanded="false" aria-controls="student-suggest"><div class="suggest hide" id="student-suggest" role="listbox"></div></div>
           <select id="student-sort" class="sl-sort"><option value="name">Orden: Nombre A–Z</option><option value="recent">Orden: Registro más reciente</option><option value="control">Orden: Último control</option><option value="due">Orden: Control más atrasado</option></select>
         </div>
         <div class="fchips" id="student-filters"></div>
@@ -3435,6 +3442,29 @@ function studentStatus(s){
   const late=(nc&&nc<today())||(ds!==null&&ds>35);
   return {le,first,ds,nc,late,hasEval:!!le,hasPlan:state.plans.some(p=>p.studentId===s.id),hasWork:state.workouts.some(w=>w.studentId===s.id),signed:!!s.consent,delta:le&&first&&l.length>1?num(le.peso)-num(first.peso):null};
 }
+
+let sugIdx=-1;
+function renderSuggest(){
+  const box=$('student-suggest'),inp=$('student-search');if(!box)return;
+  const q=normName(inp.value||'');
+  const list=state.students.filter(s=>!q||normName([s.nombre,s.rut,s.telefono,s.correo,s.objetivo].join(' ')).includes(q)).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  if(!state.students.length){box.innerHTML='<div class="sg-empty">Aún no hay alumnos</div>';}
+  else box.innerHTML=(list.length?list.map((s,i)=>`<button type="button" role="option" class="sg-item ${i===sugIdx?'on':''}" data-id="${esc(s.id)}"><span class="avatar sm">${esc(initials(s.nombre))}</span><span class="sg-t"><b>${esc(s.nombre)}</b><small>${[s.rut,s.telefono,s.objetivo].filter(Boolean).map(esc).join(' · ')||'Sin datos extra'}</small></span></button>`).join(''):'<div class="sg-empty">No hay alumnos con ese dato</div>')+`<div class="sg-foot">${list.length} de ${state.students.length} alumno(s)</div>`;
+  box.classList.remove('hide');inp.setAttribute('aria-expanded','true');
+}
+function hideSuggest(){const b=$('student-suggest');if(b){b.classList.add('hide');$('student-search').setAttribute('aria-expanded','false');}sugIdx=-1;}
+(function(){const inp=$('student-search'),box=$('student-suggest');if(!inp||!box)return;
+  inp.addEventListener('focus',()=>{sugIdx=-1;renderSuggest();});
+  inp.addEventListener('input',()=>{sugIdx=-1;renderSuggest();});
+  inp.addEventListener('keydown',e=>{const items=[...box.querySelectorAll('.sg-item')];
+    if(e.key==='ArrowDown'){e.preventDefault();sugIdx=Math.min(items.length-1,sugIdx+1);renderSuggest();box.querySelector('.sg-item.on')?.scrollIntoView({block:'nearest'});}
+    else if(e.key==='ArrowUp'){e.preventDefault();sugIdx=Math.max(0,sugIdx-1);renderSuggest();box.querySelector('.sg-item.on')?.scrollIntoView({block:'nearest'});}
+    else if(e.key==='Enter'){const it=items[sugIdx>=0?sugIdx:(items.length===1?0:-1)];if(it){e.preventDefault();hideSuggest();inp.blur();openFicha(it.dataset.id);}}
+    else if(e.key==='Escape'){hideSuggest();inp.blur();}});
+  box.addEventListener('mousedown',e=>e.preventDefault());
+  box.addEventListener('click',e=>{const it=e.target.closest('.sg-item');if(!it)return;hideSuggest();inp.blur();openFicha(it.dataset.id);});
+  inp.addEventListener('blur',()=>setTimeout(hideSuggest,120));
+})();
 const S_FILTERS=[['all','Todos'],['nofirma','Sin firma',1],['noeval','Sin evaluación',1],['noplan','Sin pauta',1],['nowork','Sin rutina',1],['late','Control atrasado',1],['salud','Con condición de salud']];
 function sMatch(s,st,f){return f==='all'||(f==='nofirma'&&!st.signed)||(f==='noeval'&&!st.hasEval)||(f==='noplan'&&!st.hasPlan)||(f==='nowork'&&!st.hasWork)||(f==='late'&&st.late)||(f==='salud'&&(has(s.condicion)||has(s.medicamentos)||has(s.limitaciones)));}
 function renderStudents(){
