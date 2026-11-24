@@ -676,7 +676,7 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
       <div class="photo-banner alumnos no-print"><div class="photo-copy"><div class="eyebrow">Evolution Power · Laguna Verde</div><h3>TU COMUNIDAD, TU FUERZA</h3><p>Cada atleta tiene una historia. Registra sus objetivos y lleva su evolución al siguiente nivel.</p></div></div>
       <div class="card sl-head">
         <div class="rowhead" style="margin-bottom:10px"><div><h3>Alumnos <span class="tag gold" id="student-count" style="vertical-align:middle;margin-left:6px">0</span></h3><p class="desc" style="margin:0">Toca una tarjeta para abrir la ficha completa.</p></div>
-          <div class="actions"><button class="btn primary" type="button" onclick="newStudent()">Nuevo alumno</button><button class="btn secondary sm" type="button" onclick="pollSignatures(true)">Firmas</button><button class="btn secondary sm" type="button" onclick="openMerge()">Unificar</button></div></div>
+          <div class="actions"><button class="btn primary" type="button" onclick="newStudent()">Nuevo alumno</button><button class="btn secondary sm" type="button" onclick="pollSignatures(true)">Firmas</button><button class="btn secondary sm" type="button" onclick="openMerge()">Unificar</button><button class="btn secondary sm" type="button" onclick="openTrash()">Papelera</button></div></div>
         <div id="dup-banner"></div>
         <div class="sl-tools">
           <div class="search" style="margin:0"><input id="student-search" placeholder="Buscar por nombre, RUT, teléfono u objetivo..."></div>
@@ -3492,7 +3492,38 @@ function deleteStudent(id){
   state.students=state.students.filter(x=>x.id!==id);['evals','plans','workouts'].forEach(k=>state[k]=state[k].filter(x=>x.studentId!==id));if(!state.students.length){window._allowEmpty=true;setTimeout(()=>window._allowEmpty=false,500);}
   if($('student-form').elements.id.value===id)resetStudentForm();
   if($('plan-student').value===id)planLoadedFor=null;
+  try{const tr=JSON.parse(localStorage.getItem(KEY+'_trash')||'[]');tr.unshift({...undoData,at:new Date().toISOString()});localStorage.setItem(KEY+'_trash',JSON.stringify(tr.slice(0,30)));}catch(e){}
   persist();toast(s.nombre+' eliminado',{label:'Deshacer',fn:undoDelete});
+}
+
+let TRASH=[];
+async function openTrash(){
+  openModal(`<div class="modal-head"><div><div class="eyebrow">Alumnos eliminados</div><h3>Papelera</h3><p class="desc" style="margin:4px 0 0">Recupera un alumno con sus evaluaciones, pauta y rutina.</p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar">✕</button></div><div id="trash-list"><p class="small-note">Buscando…</p></div>`);
+  const items=new Map();
+  try{JSON.parse(localStorage.getItem(KEY+'_trash')||'[]').forEach(u=>{if(u&&u.student&&u.student.id)items.set(u.student.id,{student:u.student,evals:u.evals||[],plans:u.plans||[],workouts:u.workouts||[],at:u.at});});}catch(e){}
+  let cloudNote='';
+  if(CLOUD.session){
+    try{
+      const r=await sbFetch('/rest/v1/ep_records?select=kind,id,data,updated_at&deleted=eq.true&order=updated_at.desc&limit=5000');const rows=await r.json();
+      rows.filter(x=>x.kind==='students'&&x.data&&x.data.nombre).forEach(x=>{if(!items.has(x.data.id||x.id))items.set(x.data.id||x.id,{student:{...x.data,id:x.data.id||x.id},evals:[],plans:[],workouts:[],at:x.updated_at});});
+      const pick=(k,f)=>rows.filter(x=>x.kind===k&&x.data&&x.data.studentId).forEach(x=>{const it=items.get(x.data.studentId);if(it&&!it[f].some(y=>JSON.stringify(y)===JSON.stringify(x.data)))it[f].push(x.data);});
+      pick('evals','evals');pick('plans','plans');pick('workouts','workouts');
+      const blank=rows.filter(x=>x.kind==='students'&&(!x.data||!x.data.nombre)).length;
+      if(blank)cloudNote=`<p class="small-note" style="margin-top:12px">${blank} alumno(s) se borraron antes de que existiera la papelera y no se pueden recuperar.</p>`;
+    }catch(e){cloudNote='<p class="small-note" style="margin-top:12px">No se pudo revisar la nube: '+esc(e.message)+'</p>';}
+  }else cloudNote='<p class="small-note" style="margin-top:12px">Inicia sesión en la nube para ver también lo eliminado en otros dispositivos.</p>';
+  const live=new Set(state.students.map(s=>s.id));
+  TRASH=[...items.values()].filter(x=>!live.has(x.student.id));
+  const el=$('trash-list');if(!el)return;
+  el.innerHTML=(TRASH.length?TRASH.map((x,i)=>`<div class="todo-item" style="cursor:default"><div style="flex:1;min-width:0"><b>${esc(x.student.nombre)}</b><div class="small-note">${[x.student.rut,x.evals.length&&x.evals.length+' evaluación(es)',x.plans.length&&'pauta',x.workouts.length&&'rutina',x.at&&'eliminado '+new Date(x.at).toLocaleDateString('es-CL')].filter(Boolean).map(esc).join(' · ')}</div></div><button class="btn sm green" type="button" onclick="restoreTrash(${i})">Restaurar</button></div>`).join(''):'<p class="desc">No hay alumnos eliminados para recuperar.</p>')+cloudNote;
+}
+function restoreTrash(i){
+  const x=TRASH[i];if(!x)return;
+  if(state.students.some(s=>s.id===x.student.id)){toast('Ese alumno ya está en la lista');return;}
+  state.students.push(x.student);
+  [['evals','evals'],['plans','plans'],['workouts','workouts']].forEach(([k,f])=>x[f].forEach(d=>{if(!state[k].some(y=>JSON.stringify(y)===JSON.stringify(d)))state[k].push(d);}));
+  try{const tr=JSON.parse(localStorage.getItem(KEY+'_trash')||'[]').filter(u=>u?.student?.id!==x.student.id);localStorage.setItem(KEY+'_trash',JSON.stringify(tr));}catch(e){}
+  persist();closeModal();toast(x.student.nombre+' restaurado');
 }
 function undoDelete(){
   if(!undoData)return;const u=undoData;undoData=null;
@@ -4601,7 +4632,7 @@ async function cloudPush(){
   try{
     const now=stateRows(),seen=new Set(),up=[];
     now.forEach(([k,id,d])=>{const key=k+'|'+id;seen.add(key);const js=JSON.stringify(d);if(CLOUD.map[key]!==js)up.push({kind:k,id:String(id),data:d,deleted:false,_js:js,_key:key});});
-    Object.keys(CLOUD.map).forEach(key=>{if(!seen.has(key)&&CLOUD.map[key]!==null){const [k,...r]=key.split('|');up.push({kind:k,id:r.join('|'),data:{},deleted:true,_js:null,_key:key});}});
+    Object.keys(CLOUD.map).forEach(key=>{if(!seen.has(key)&&CLOUD.map[key]!==null){const [k,...r]=key.split('|');let dd={};try{dd=JSON.parse(CLOUD.map[key]||'{}')||{};}catch(e){}up.push({kind:k,id:r.join('|'),data:dd,deleted:true,_js:null,_key:key});}});
     for(let i=0;i<up.length;i+=200){
       const chunk=up.slice(i,i+200);
       await sbFetch('/rest/v1/ep_records?on_conflict=kind,id',{method:'POST',headers:{'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
