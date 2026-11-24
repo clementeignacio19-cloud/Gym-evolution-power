@@ -3961,10 +3961,20 @@ function receiveSignature(o){
 window.addEventListener('hashchange',handleHash);
 
 /* --- avisos automáticos de firma --- */
+function allSigKeys(){
+  const ks=new Set();try{JSON.parse(localStorage.getItem(KEY+'_keys')||'[]').forEach(k=>k&&ks.add(k));}catch(e){}
+  (state.config.notifyKeys||[]).forEach(k=>k&&ks.add(k));if(state.config.notify?.key)ks.add(state.config.notify.key);
+  const cur=state.config.notify?.key;return [cur,...[...ks].filter(k=>k!==cur)].filter(Boolean);
+}
+function rememberSigKeys(){
+  const ks=allSigKeys();try{localStorage.setItem(KEY+'_keys',JSON.stringify(ks));}catch(e){}
+  const prev=JSON.stringify(state.config.notifyKeys||[]);const nk=ks.filter(k=>k!==state.config.notify?.key);
+  if(JSON.stringify(nk)!==prev)state.config.notifyKeys=nk;
+}
 function notifyCfg(){
   if(!state.config.notify?.topic){const r=crypto.getRandomValues(new Uint8Array(32)),tp=crypto.getRandomValues(new Uint8Array(15));
-    state.config.notify={topic:'ep-'+b64u(tp).toLowerCase().replace(/[^a-z0-9]/g,'x'),key:b64u(r),since:''};saveLocal();}
-  return state.config.notify;
+    state.config.notify={topic:'ep-'+b64u(tp).toLowerCase().replace(/[^a-z0-9]/g,'x'),key:b64u(r),since:''};rememberSigKeys();saveLocal();}
+  rememberSigKeys();return state.config.notify;
 }
 async function aesKey(k){return crypto.subtle.importKey('raw',unb64u(k),'AES-GCM',false,['encrypt','decrypt']);}
 async function encStr(k,str){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await aesKey(k),new TextEncoder().encode(str));return 'e'+b64u(iv)+'.'+b64u(new Uint8Array(ct));}
@@ -4008,14 +4018,17 @@ function checkWatch(){
 }
 function resolveDupSilent(id){const n=state.notifs.find(x=>x.id===id);if(!n)return;const i=state.students.findIndex(x=>x.id===n.sid);if(i>-1&&n.c){state.students[i].consent=n.c;n.resolved='Se usó la firma nueva (firmó con QR en presencia)';n.read=true;persist();renderConsentPanel();}}
 async function handleSigCipher(key,cipher){
-  const o=await unpackObj(await decStr(key,cipher));const s=findStudentFor(o);
+  let plain=null;for(const k of [key,...allSigKeys()].filter(Boolean)){try{plain=await decStr(k,cipher);break;}catch(e){}}if(plain===null)throw new Error('ilegible');
+  const o=await unpackObj(plain);const s=findStudentFor(o);
   if(!s){if(!(state.notifs||[]).some(x=>x.type==='huerfana'&&x.o?.h===o.h)){addNotif({type:'huerfana',title:`Firma recibida de ${o.n}`,text:`No encontré su ficha (RUT ${o.r||'—'}). Asígnala a un alumno o créalo.`,o});return {r:'nuevo',name:o.n};}return {r:'igual',name:o.n};}
   o.i=s.id;const g=gym();const text=o.x||fillConsent(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g);
   return {r:registerSignature(o.i,{name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto'},'remoto'),name:o.n};
 }
 let polling=false;
 async function pollSignatures(manual,fromWatch){
-  const n=state.config.notify;if(!n?.topic){if(manual)toast('Aún no has enviado links de firma');return;}
+  const n=state.config.notify;if(!n?.topic){
+    if(CLOUD.ready){const c=await cloudInbox();if(c.got.length||c.dups.length){persist();renderConsentPanel();toast(c.got.length?'✍️ Nueva firma: '+c.got.join(', '):'⚠️ Firma duplicada: '+c.dups.join(', '));}else if(manual)toast('Sin firmas nuevas');return;}
+    if(manual)toast('Aún no has enviado links de firma');return;}
   if(polling)return;polling=true;
   try{await pollCore(manual);}finally{polling=false;checkWatch();}
 }
@@ -4616,7 +4629,10 @@ function stateRows(){
   return rows;
 }
 function applyRow(kind,id,data,deleted){
-  if(kind==='config'){if(!deleted){state.config=data||{};}return;}
+  if(kind==='config'){if(!deleted){const oldKeys=allSigKeys();const oldNotify=state.config.notify;state.config=data||{};
+    if(!state.config.notify?.key&&oldNotify?.key)state.config.notify=oldNotify;
+    const nk=new Set([...(state.config.notifyKeys||[]),...oldKeys]);nk.delete(state.config.notify?.key);state.config.notifyKeys=[...nk];
+    try{localStorage.setItem(KEY+'_keys',JSON.stringify(allSigKeys()));}catch(e){}}return;}
   const key=(kind==='plans'||kind==='workouts')?'studentId':'id';
   const arr=kind==='notifs'?(state.notifs=state.notifs||[]):state[kind];if(!arr)return;
   const i=arr.findIndex(x=>x[key]===id);
@@ -4695,12 +4711,14 @@ async function cloudStart(){
 /* --- bandeja de firmas en Supabase --- */
 async function cloudInbox(){
   if(!CLOUD.session||!CLOUD.ready)return {got:[],dups:[]};
-  const res={got:[],dups:[]};const key=state.config.notify?.key;if(!key)return res;
+  const res={got:[],dups:[]};const key=state.config.notify?.key||allSigKeys()[0]||'';let bad=0;
   try{
     const r=await sbFetch('/rest/v1/ep_firmas?select=id,payload,created_at&processed=eq.false&order=created_at.asc&limit=200');
     const items=await r.json();
-    for(const it of items){let st=null;try{st=await handleSigCipher(key,it.payload);}catch(e){continue;}
+    for(const it of items){let st=null;try{st=await handleSigCipher(key,it.payload);}catch(e){bad++;continue;}
       if(st.r==='nuevo')res.got.push(st.name);else if(st.r==='dup')res.dups.push(st.name);await sbFetch('/rest/v1/ep_firmas?id=eq.'+it.id,{method:'PATCH',headers:{'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({processed:true})}).catch(()=>{});}
+    window._sigBad=bad;
+    if(bad&&!(state.notifs||[]).some(n=>n.type==='ilegible'&&n.count===bad)){addNotif({type:'ilegible',count:bad,title:`${bad} firma(s) recibida(s) que este dispositivo no puede leer`,text:'Se firmaron con un link creado en otro dispositivo. Abre el sistema en el celular o computador donde enviaste ese link (con la sesión iniciada) y se cargarán solas.'});persist();}
   }catch(e){console.warn('inbox',e);}
   return res;
 }
