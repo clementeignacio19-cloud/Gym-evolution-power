@@ -610,6 +610,8 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
 .sg-item .avatar.sm{width:34px;height:34px;font-size:13px;border-radius:8px}
 .sg-t{display:flex;flex-direction:column;min-width:0}.sg-t b{font-weight:600}.sg-t small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sg-empty{padding:12px;color:var(--muted)}.sg-foot{padding:7px 10px 3px;color:#7a7a74;font-size:12px;border-top:1px solid #2b2b2b;margin-top:4px}
+.tutor-box{border:1px solid rgba(217,169,49,.35);background:rgba(217,169,49,.06);border-radius:12px;padding:14px}
+.tutor-head{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}.tutor-head b{color:var(--gold2);font-family:'Saira Condensed',sans-serif;font-size:16px}.tutor-head span{color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -700,10 +702,20 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
             <div class="fieldgrid two">
               <div class="field full"><label>Nombre completo</label><input name="nombre" required placeholder="Ej. Benjamín Soto"></div>
               <div class="field"><label>RUT</label><input name="rut" placeholder="12.345.678-9"></div>
-              <div class="field"><label>Edad</label><input name="edad" type="number" inputmode="numeric" min="10" max="99" placeholder="Ej. 28"></div>
+              <div class="field"><label>Edad</label><input name="edad" type="number" inputmode="numeric" min="4" max="99" placeholder="Ej. 28"></div>
               <div class="field"><label>Sexo</label><select name="sexo"><option value="">Sin indicar</option><option>Masculino</option><option>Femenino</option></select></div>
               <div class="field"><label>Teléfono</label><input name="telefono" type="tel" placeholder="+56 9..."></div>
               <div class="field"><label>Correo</label><input name="correo" type="email" placeholder="correo@ejemplo.com"></div>
+              <div class="field full tutor-box hide" id="tutor-box">
+                <div class="tutor-head"><b>Menor de edad · datos del tutor legal</b><span>El tutor firma el consentimiento en representación del alumno. Los links de firma se envían a su teléfono o correo.</span></div>
+                <div class="fieldgrid two">
+                  <div class="field"><label>Nombre del tutor</label><input name="tutorNombre" placeholder="Ej. María Pérez"></div>
+                  <div class="field"><label>RUT del tutor</label><input name="tutorRut" placeholder="12.345.678-9"></div>
+                  <div class="field"><label>Parentesco</label><select name="tutorParentesco"><option>Madre</option><option>Padre</option><option>Tutor legal</option><option>Abuelo/a</option><option>Otro familiar</option></select></div>
+                  <div class="field"><label>Teléfono del tutor</label><input name="tutorTelefono" type="tel" placeholder="+56 9..."></div>
+                  <div class="field full"><label>Correo del tutor</label><input name="tutorCorreo" type="email" placeholder="correo@ejemplo.com"></div>
+                </div>
+              </div>
               <div class="field"><label>Objetivo</label><select name="objetivo"><option>Bajar grasa</option><option>Ganar masa muscular</option><option>Mejorar rendimiento</option><option>Mantención</option><option>Recomposición corporal</option></select></div>
               <div class="field"><label>Frecuencia de entrenamiento</label><select name="frecuencia"><option>2 veces/semana</option><option>3 veces/semana</option><option>4 veces/semana</option><option>5 veces/semana</option><option>6 veces/semana</option></select></div>
               <div class="field full health-title"><label style="font-size:13px;color:#e8c25a">🩺 Antecedentes de salud</label></div>
@@ -3655,15 +3667,23 @@ function delGymSig(){if(!confirm('¿Quitar la firma del gimnasio?'))return;delet
 function sigPairHTML(c,s,g,gsig,cls){
   const fecha=c?new Date(c.at).toLocaleString('es-CL'):'';
   return `<div class="${cls||'sig-pair'}">
-    <div>${c?`<img src="${sigToPNG(c.sig)}" alt="Firma alumno">`:'<div style="height:70px"></div>'}<div class="ln"><b>${esc(c?.name||s.nombre||'')}</b><br>RUT ${esc(c?.rut||s.rut||'____________')}<br>Firma del alumno${fecha?' · '+fecha:''}</div></div>
+    <div>${c?`<img src="${sigToPNG(c.sig)}" alt="Firma alumno">`:'<div style="height:70px"></div>'}${(()=>{const tu=c?c.tutor:isMinor(s);return `<div class="ln"><b>${esc(c?.name||(tu?s.tutorNombre:s.nombre)||'')}</b><br>RUT ${esc(c?.rut||(tu?s.tutorRut:s.rut)||'____________')}<br>${tu?'Firma del tutor legal, en representación de '+esc(s.nombre||'el alumno'):'Firma del alumno'}${fecha?' · '+fecha:''}</div>`;})()}</div>
     <div>${gsig?`<img src="${gsig}" alt="Firma gimnasio">`:'<div style="height:70px"></div>'}<div class="ln"><b>${esc(g.responsable||g.nombre||'')}</b><br>${esc(g.nombre||'')}${g.rut?' · '+esc(g.rut):''}<br>Firma del gimnasio</div></div></div>`;
 }
 function loadGymForm(){const g=gym();document.querySelectorAll('[data-gym]').forEach(i=>i.value=g[i.dataset.gym]||'');renderGymSig();}
 function saveGym(){const g={};document.querySelectorAll('[data-gym]').forEach(i=>g[i.dataset.gym]=i.value.trim());if(!g.texto)g.texto=DEFAULT_CONSENT;if(!g.nombre)g.nombre='Evolution Power';state.config.gym=g;persist();renderConsentPanel();toast('✅ Datos del gimnasio guardados');}
 function resetConsentText(){if(!confirm('¿Volver al texto predeterminado del consentimiento?'))return;document.querySelector('[data-gym=texto]').value=DEFAULT_CONSENT;saveGym();}
+const isMinor=s=>{const e=parseInt(s?.edad,10);return e>0&&e<18;};
+function updateTutorBox(){const f=$('student-form');if(!f)return;const m=isMinor({edad:f.elements.edad.value});$('tutor-box').classList.toggle('hide',!m);}
+const TUTOR_CLAUSE=`AUTORIZACIÓN DEL TUTOR LEGAL
+
+Yo, {tutor}, RUT {rut_tutor}, en calidad de {parentesco} y representante legal de {alumno}, RUT {rut}, de {edad} años, autorizo su participación en las actividades de {gimnasio}. Declaro haber leído este consentimiento, lo acepto en su representación y confirmo que la información de salud entregada es verdadera.`;
+function consentFor(tpl,s,g,fecha){let txt=fillConsent(tpl,s,g,fecha);if(isMinor(s)&&!/\{tutor\}/.test(tpl))txt+='\n\n'+fillConsent(TUTOR_CLAUSE,s,g,fecha);return txt;}
+function tutorMissing(s){return isMinor(s)&&!String(s.tutorNombre||'').trim();}
+function askTutor(){toast('Alumno menor de edad: completa los datos del tutor en la ficha');const f=$('student-form');if(f?.elements.tutorNombre){$('tutor-box').classList.remove('hide');f.elements.tutorNombre.focus();}}
 function fillConsent(tpl,s,g,fecha){
   const v={registro:s.fechaRegistro?fdate(s.fechaRegistro):new Date().toLocaleDateString('es-CL'),alumno:s.nombre||'________',rut:s.rut||'________',edad:s.edad||'__',gimnasio:g.nombre||'el gimnasio',responsable:g.responsable||'su equipo de entrenadores',direccion:g.direccion||'—',fecha:fecha||new Date().toLocaleDateString('es-CL'),
-    condicion:s.condicion||'No declara',medicamentos:s.medicamentos||'No declara',limitaciones:s.limitaciones||'No declara'};
+    condicion:s.condicion||'No declara',medicamentos:s.medicamentos||'No declara',limitaciones:s.limitaciones||'No declara',tutor:s.tutorNombre||'________',rut_tutor:s.tutorRut||'________',parentesco:(s.tutorParentesco||'tutor legal').toLowerCase()};
   return String(tpl).replace(/\{(\w+)\}/g,(m,k)=>k in v?v[k]:m);
 }
 /* --- compresión para links --- */
@@ -3716,12 +3736,13 @@ function formStudent(){const f=$('student-form');const d=Object.fromEntries(new 
 function renderConsentPanel(){
   if(!$('consent-panel'))return;
   const s=formStudent(),g=gym(),c=s.consent;
-  $('consent-preview').textContent=c?.text||fillConsent(g.texto,s,g);
+  updateTutorBox();$('consent-preview').textContent=c?.text||consentFor(g.texto,s,g);
   $('consent-status').innerHTML=c?`<span class="tag">✓ Firmado ${new Date(c.at).toLocaleDateString('es-CL')}</span>`:s.consentSent?`<span class="tag gold">📧 Enviado · pendiente</span>`:'<span class="tag red">Pendiente de firma</span>';
   const dates=`<div class="small-note" style="margin-top:8px">📅 Fecha de registro: <b style="color:#fff">${s.fechaRegistro?fdate(s.fechaRegistro):'se asigna al guardar'}</b> · Fecha de firma: <b style="color:#fff">${c?new Date(c.at).toLocaleDateString('es-CL'):'pendiente'}</b></div>`;
   $('consent-sig-view').innerHTML=dates+sigPairHTML(c,s,g,gymSigURL())+(c?`<div class="small-note" style="margin-top:6px">Código: <b style="color:#e8c25a">${esc(c.code)}</b> · ${c.method==='remoto'?'firma remota':'firma presencial'} <button class="btn sm danger" type="button" style="margin-left:6px" onclick="clearConsent()">Anular firma</button></div>`:'');
   if(false)$('consent-sig-view').innerHTML=c?`<div class="verify" style="margin-top:6px"><img class="sig-img" style="width:180px;height:auto" src="${sigToPNG(c.sig,450,158)}" alt="Firma"><div class="small-note">Firmado por <b style="color:#fff">${esc(c.name)}</b>${c.rut?' · '+esc(c.rut):''}<br>${new Date(c.at).toLocaleString('es-CL')} · ${c.method==='remoto'?'firma remota':'firma presencial'}<br>Código: <b style="color:#e8c25a">${esc(c.code)}</b> <button class="btn sm danger" type="button" style="margin-left:6px" onclick="clearConsent()">Anular firma</button></div></div>`:'';
 }
+$('student-form').elements.edad.addEventListener('input',updateTutorBox);
 $('student-form').addEventListener('input',()=>{clearTimeout(window._cpt);window._cpt=setTimeout(renderConsentPanel,250);});
 function saveStudentKeep(){
   const f=$('student-form');const d=Object.fromEntries(new FormData(f).entries());d.nombre=(d.nombre||'').trim();
@@ -3733,6 +3754,8 @@ function saveStudentKeep(){
 async function consentAction(act,btn,sid){
   const s=sid?state.students.find(x=>x.id===sid):saveStudentKeep();if(!s)return;const g=gym();
   if(act==='sign')return openSignModal(s.id);
+  if(act!=='pdf'&&act!=='print'&&tutorMissing(s))return askTutor();
+  const minor=isMinor(s),toName=minor?s.tutorNombre:s.nombre,toPhone=minor?(s.tutorTelefono||s.telefono):s.telefono,toMail=minor?(s.tutorCorreo||s.correo):s.correo;
   if(act==='link'){
     const lp=signLink(s);
     const ok=()=>toast('Link de firma copiado. Pégalo donde quieras enviarlo');
@@ -3742,29 +3765,29 @@ async function consentAction(act,btn,sid){
     }catch(e){const l=await lp;try{await navigator.clipboard.writeText(l);ok();}catch(_){prompt('Copia el link:',l);}return;}
   }
   if(act==='wa'){
-    const ph=String(s.telefono||'').replace(/\D/g,'');
-    if(ph.length<8){toast('Agrega el teléfono del alumno en la ficha (ej. +56 9 1234 5678)');if($('student-form').elements.telefono){$('student-form-card')?.classList.remove('hide');$('student-form').elements.telefono.focus();}return;}
+    const ph=String(toPhone||'').replace(/\D/g,'');
+    if(ph.length<8){toast(minor?'Agrega el teléfono del tutor en la ficha':'Agrega el teléfono del alumno en la ficha (ej. +56 9 1234 5678)');const fe=$('student-form').elements[minor?'tutorTelefono':'telefono'];if(fe){$('student-form-card')?.classList.remove('hide');fe.focus();}return;}
     const num=ph.length===9&&ph[0]==='9'?'56'+ph:ph;
     const link=await signLink(s);
-    const msg=`Hola ${s.nombre.split(' ')[0]} 👋\n\nBienvenido/a a ${g.nombre}. Para completar tu inscripción, revisa y firma el consentimiento desde tu celular aquí:\n\n${link}\n\n¡Gracias! 💪`;
-    const i=state.students.findIndex(x=>x.id===s.id);state.students[i].consentSent=new Date().toISOString();addNotif({type:'enviado',sid:s.id,title:`Consentimiento enviado a ${s.nombre}`,text:'Link de firma enviado por WhatsApp.',read:true});persist();renderConsentPanel();
+    const msg=minor?`Hola ${toName.split(' ')[0]} 👋\n\n${s.nombre} se está inscribiendo en ${g.nombre}. Como es menor de edad, necesitamos que tú, como su tutor/a, revises y firmes el consentimiento desde tu celular aquí:\n\n${link}\n\n¡Gracias! 💪`:`Hola ${s.nombre.split(' ')[0]} 👋\n\nBienvenido/a a ${g.nombre}. Para completar tu inscripción, revisa y firma el consentimiento desde tu celular aquí:\n\n${link}\n\n¡Gracias! 💪`;
+    const i=state.students.findIndex(x=>x.id===s.id);state.students[i].consentSent=new Date().toISOString();addNotif({type:'enviado',sid:s.id,title:`Consentimiento enviado a ${s.nombre}`,text:minor?`Link enviado por WhatsApp al tutor (${toName}).`:'Link de firma enviado por WhatsApp.',read:true});persist();renderConsentPanel();
     window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');return;
   }
   if(act==='qr'||act==='mail'){
     const link=await signLink(s);
     if(act==='mail'){
-      if(!s.correo){toast('Agrega el correo del alumno en la ficha');$('student-form').elements.correo.focus();return;}
+      if(!toMail){toast(minor?'Agrega el correo del tutor en la ficha':'Agrega el correo del alumno en la ficha');$('student-form').elements[minor?'tutorCorreo':'correo']?.focus();return;}
       const subject=`Consentimiento informado · ${g.nombre}`;
-      const body=`Hola ${s.nombre.split(' ')[0]}:\n\nBienvenido/a a ${g.nombre}. Para completar tu inscripción, revisa y firma el consentimiento informado desde tu celular en este link:\n\n${link}\n\nAl firmar podrás descargar tu copia en PDF y se enviará la firma al gimnasio.\n\nSaludos,\n${g.responsable||g.nombre}${g.telefono?'\n'+g.telefono:''}`;
-      const i=state.students.findIndex(x=>x.id===s.id);state.students[i].consentSent=new Date().toISOString();addNotif({type:'enviado',sid:s.id,title:`Consentimiento enviado a ${s.nombre}`,text:`Link de firma enviado a ${s.correo}.`,read:true});persist();renderConsentPanel();
-      openModal(`<div class="modal-head"><div><div class="eyebrow">¿Con qué app envías el correo?</div><h3>${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">Para: <b>${esc(s.correo)}</b></p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      const body=minor?`Hola ${toName.split(' ')[0]}:\n\n${s.nombre} se está inscribiendo en ${g.nombre}. Como es menor de edad, necesitamos que tú, como su tutor/a, revises y firmes el consentimiento informado en su representación desde tu celular en este link:\n\n${link}\n\nAl firmar podrás descargar tu copia en PDF y se enviará la firma al gimnasio.\n\nSaludos,\n${g.responsable||g.nombre}${g.telefono?'\n'+g.telefono:''}`:`Hola ${s.nombre.split(' ')[0]}:\n\nBienvenido/a a ${g.nombre}. Para completar tu inscripción, revisa y firma el consentimiento informado desde tu celular en este link:\n\n${link}\n\nAl firmar podrás descargar tu copia en PDF y se enviará la firma al gimnasio.\n\nSaludos,\n${g.responsable||g.nombre}${g.telefono?'\n'+g.telefono:''}`;
+      const i=state.students.findIndex(x=>x.id===s.id);state.students[i].consentSent=new Date().toISOString();addNotif({type:'enviado',sid:s.id,title:`Consentimiento enviado a ${s.nombre}`,text:`Link de firma enviado a ${toMail}${minor?' (tutor)':''}.`,read:true});persist();renderConsentPanel();
+      openModal(`<div class="modal-head"><div><div class="eyebrow">¿Con qué app envías el correo?</div><h3>${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">Para: <b>${esc(toMail)}</b>${minor?' · tutor':''}</p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <div class="actions" style="flex-direction:column;align-items:stretch">
-          <a class="btn primary" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(s.correo)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Abrir en Gmail</a>
-          <a class="btn secondary" href="mailto:${encodeURIComponent(s.correo)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Abrir en mi app de correo</a>
+          <a class="btn primary" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toMail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Abrir en Gmail</a>
+          <a class="btn secondary" href="mailto:${encodeURIComponent(toMail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Abrir en mi app de correo</a>
         </div><p class="small-note" style="margin-top:12px">Cuando el alumno firme, te llega un correo de confirmación y su ficha se actualiza sola al abrir el sistema.</p>`);
       return;
     }
-    openModal(`<div class="modal-head"><div><div class="eyebrow">Firma con QR</div><h3>${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">El alumno escanea con la cámara de su celular, lee y firma.</p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    openModal(`<div class="modal-head"><div><div class="eyebrow">Firma con QR</div><h3>${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">${minor?'El tutor ('+esc(toName)+') escanea con su celular, lee y firma en representación del alumno.':'El alumno escanea con la cámara de su celular, lee y firma.'}</p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="qr-box" id="qr-box"><img src="${qrDataURL(link,6)}" alt="QR de firma"><b style="color:#111;font-size:13px">Escanea para firmar</b></div>
       <div class="qr-wait" id="qr-wait"><span class="spin"></span> Esperando la firma de ${esc(s.nombre.split(' ')[0])}… se actualiza sola</div>
       <div class="actions" style="justify-content:center;margin-top:14px"><button class="btn sm ghost" type="button" onclick="copyText(this.dataset.l)" data-l="${esc(link)}">Copiar link</button><button class="btn sm secondary" type="button" onclick="closeModal();openSignModal('${esc(s.id)}')">Mejor firmar en este equipo</button></div>`);
@@ -3777,28 +3800,29 @@ async function consentAction(act,btn,sid){
 function copyText(t){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copiado')).catch(()=>{prompt('Copia el link:',t);});}
 async function signLink(s){
   const g=gym(),nt=notifyCfg();const o={q:nt.topic,k:nt.key,e:s.correo||'',i:s.id,fr:s.fechaRegistro||'',n:s.nombre,r:s.rut||'',a:s.edad||'',c:s.condicion||'',m:s.medicamentos||'',l:s.limitaciones||'',g:{n:g.nombre,r:g.rut,p:g.responsable,d:g.direccion,t:g.telefono,e:g.correo}};
+  if(isMinor(s)){o.tu={n:s.tutorNombre||'',r:s.tutorRut||'',p:s.tutorParentesco||'Tutor legal'};if(s.tutorCorreo)o.e=s.tutorCorreo;}
   if(g.texto!==DEFAULT_CONSENT)o.t=g.texto;
   return siteURL()+'#firmar='+(await packObj(o));
 }
 function openSignModal(sid){
-  const s=state.students.find(x=>x.id===sid),g=gym();if(!s)return;
-  openModal(`<div class="modal-head"><div><div class="eyebrow">Firma presencial</div><h3>${esc(s.nombre)}</h3></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="consent-text" style="max-height:260px">${esc(fillConsent(g.texto,s,g))}</div>
-    <div class="fieldgrid two" style="margin-top:12px"><div class="field"><label>Nombre de quien firma</label><input id="sg-name" value="${esc(s.nombre)}"></div><div class="field"><label>RUT</label><input id="sg-rut" value="${esc(s.rut||'')}" placeholder="12.345.678-9"></div></div>
+  const s=state.students.find(x=>x.id===sid),g=gym();if(!s)return;const minor=isMinor(s);if(tutorMissing(s))return askTutor();
+  openModal(`<div class="modal-head"><div><div class="eyebrow">Firma presencial${minor?' · firma el tutor':''}</div><h3>${esc(s.nombre)}</h3>${minor?`<p class="desc" style="margin:4px 0 0">Menor de edad: firma ${esc(s.tutorNombre)} (${esc((s.tutorParentesco||'tutor').toLowerCase())}) en su representación.</p>`:''}</div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="consent-text" style="max-height:260px">${esc(consentFor(g.texto,s,g))}</div>
+    <div class="fieldgrid two" style="margin-top:12px"><div class="field"><label>${minor?'Nombre del tutor que firma':'Nombre de quien firma'}</label><input id="sg-name" value="${esc(minor?s.tutorNombre:s.nombre)}"></div><div class="field"><label>${minor?'RUT del tutor':'RUT'}</label><input id="sg-rut" value="${esc((minor?s.tutorRut:s.rut)||'')}" placeholder="12.345.678-9"></div></div>
     <div style="margin-top:12px" id="sg-pad"></div>
     <label style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:13px"><input type="checkbox" id="sg-ok" style="accent-color:var(--gold);width:20px;height:20px;flex:none"> Declaro haber leído y acepto el consentimiento informado.</label>
     <div class="actions" style="margin-top:14px;justify-content:space-between"><button class="btn ghost" type="button" onclick="window._pad.clear()">Borrar firma</button><button class="btn green" type="button" onclick="confirmLocalSign('${esc(sid)}')">Confirmar firma</button></div>`);
   window._pad=makePad($('sg-pad'));
 }
 async function confirmLocalSign(sid){
-  const s=state.students.find(x=>x.id===sid),g=gym();
+  const s=state.students.find(x=>x.id===sid),g=gym();const minor=isMinor(s);
   if(!$('sg-ok').checked){toast('Debe marcar la casilla de aceptación');return;}
   if(!window._pad.strokes.length){toast('Falta la firma');return;}
-  const name=$('sg-name').value.trim()||s.nombre,rut=$('sg-rut').value.trim();
-  const at=new Date().toISOString(),text=fillConsent(g.texto,{...s,rut:rut||s.rut},g,new Date(at).toLocaleDateString('es-CL'));
+  const name=$('sg-name').value.trim()||(minor?s.tutorNombre:s.nombre),rut=$('sg-rut').value.trim();
+  const at=new Date().toISOString(),text=minor?consentFor(g.texto,{...s,tutorNombre:name,tutorRut:rut||s.tutorRut},g,new Date(at).toLocaleDateString('es-CL')):consentFor(g.texto,{...s,rut:rut||s.rut},g,new Date(at).toLocaleDateString('es-CL'));
   const sig=window._pad.strokes.map(st=>st.slice());
   const code=await signCode({text,name,rut,at,sig});
-  const r=registerSignature(sid,{name,rut,at,sig,code,text,method:'presencial'},'presencial');persist();renderConsentPanel();closeModal();toast(r==='dup'?'⚠️ Ya tenía una firma: elige cuál conservar en Notificaciones':'✅ Consentimiento firmado');
+  const r=registerSignature(sid,{name,rut,at,sig,code,text,method:'presencial',tutor:minor},'presencial');persist();renderConsentPanel();closeModal();toast(r==='dup'?'⚠️ Ya tenía una firma: elige cuál conservar en Notificaciones':'✅ Consentimiento firmado');
 }
 function storeConsent(sid,c){
   const i=state.students.findIndex(x=>x.id===sid);if(i<0)return false;
@@ -3856,8 +3880,8 @@ function assignOrphan(id,mode){
   const n=state.notifs.find(x=>x.id===id);if(!n?.o)return;const o=n.o;let sid;
   if(mode==='new'){sid=uid();state.students.push({id:sid,nombre:o.n,rut:o.r||'',fechaRegistro:today(),objetivo:'Mantención',frecuencia:'3 veces/semana'});}
   else{sid=document.getElementById('as-'+id)?.value;if(!sid){toast('Elige un alumno');return;}}
-  const g=gym(),s=state.students.find(x=>x.id===sid);const text=o.x||fillConsent(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g);
-  const r=registerSignature(sid,{name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto'},'remoto');
+  const g=gym(),s=state.students.find(x=>x.id===sid);const text=o.x||(o.tu?consentFor(g.texto,{...s,tutorNombre:o.n,tutorRut:o.r},g):consentFor(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g));
+  const r=registerSignature(sid,{name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto',tutor:!!o.tu},'remoto');
   n.resolved=mode==='new'?'Se creó la ficha de '+o.n+' con su firma':'Firma guardada en la ficha de '+s.nombre;n.read=true;persist();renderConsentPanel();toast(r==='dup'?'⚠️ Ese alumno ya tenía firma: revisa el aviso de duplicado':'✅ '+n.resolved);
 }
 function registerSignature(sid,c,origin){
@@ -3868,7 +3892,7 @@ function registerSignature(sid,c,origin){
     addNotif({type:'dup',sid,title:`${c.name} firmó dos veces`,text:`Ya tenía un consentimiento firmado el ${new Date(s.consent.at).toLocaleString('es-CL')} (código ${s.consent.code}). Llegó otra firma el ${new Date(c.at).toLocaleString('es-CL')} (código ${c.code}) ${origin==='remoto'?'desde su celular':'en forma presencial'}. Elige cuál conservar.`,c});
     return 'dup';
   }
-  state.students[i].consent=c;if(c.rut&&!s.rut)state.students[i].rut=c.rut;
+  state.students[i].consent=c;if(c.rut&&!s.rut&&!c.tutor)state.students[i].rut=c.rut;if(c.tutor){if(c.name&&!s.tutorNombre)state.students[i].tutorNombre=c.name;if(c.rut&&!s.tutorRut)state.students[i].tutorRut=c.rut;}
   addNotif({type:origin==='remoto'?'firma':'presencial',sid,title:`${c.name} firmó el consentimiento`,text:`${origin==='remoto'?'Firma remota (link/QR)':'Firma presencial'} · ${new Date(c.at).toLocaleString('es-CL')} · Código ${c.code}`});
   return 'nuevo';
 }
@@ -3927,14 +3951,14 @@ async function handleHash(){
 function renderSignPage(o){
   document.querySelector('.app').classList.add('hide');document.querySelector('.bnav')?.classList.add('hide');
   const g={nombre:o.g?.n||'Evolution Power',rut:o.g?.r||'',responsable:o.g?.p||'',direccion:o.g?.d||'',telefono:o.g?.t||'',correo:o.g?.e||''};
-  const s={nombre:o.n,rut:o.r,edad:o.a,condicion:o.c,medicamentos:o.m,limitaciones:o.l,fechaRegistro:o.fr};
+  const s={nombre:o.n,rut:o.r,edad:o.a,condicion:o.c,medicamentos:o.m,limitaciones:o.l,fechaRegistro:o.fr,tutorNombre:o.tu?.n,tutorRut:o.tu?.r,tutorParentesco:o.tu?.p};const tu=!!o.tu;
   const pg=$('sign-page');pg.classList.remove('hide');
   pg.innerHTML=`<div class="brand" style="margin-bottom:16px"><img class="brand-logo" src="${LOGO_EM}" alt="Evolution Power"><div><h1>${esc(g.nombre.toUpperCase())}</h1><small>Consentimiento informado</small></div></div>
-    <div class="card"><h3>Hola ${esc(String(o.n||'').split(' ')[0])} 👋</h3><p class="desc">Lee el documento, completa tu RUT y firma al final.</p>
-      <div class="consent-text" style="max-height:none">${esc(fillConsent(o.t||DEFAULT_CONSENT,s,g))}</div>
+    <div class="card"><h3>Hola ${esc(String((tu?o.tu.n:o.n)||'').split(' ')[0])}</h3><p class="desc">${tu?`Firmas como tutor/a legal de <b style="color:#fff">${esc(o.n)}</b>, que es menor de edad. Lee el documento, revisa tu nombre y RUT, y firma al final.`:'Lee el documento, completa tu RUT y firma al final.'}</p>
+      <div class="consent-text" style="max-height:none">${esc(consentFor(o.t||DEFAULT_CONSENT,s,g))}</div>
       <div class="small-note" style="margin-top:8px">📅 Fecha de registro: <b style="color:#fff">${o.fr?fdate(o.fr):'—'}</b> · Fecha de firma: <b style="color:#fff">${new Date().toLocaleDateString('es-CL')}</b></div>
       <div id="sp-gsig"></div></div>
-    <div class="card" id="sp-form"><div class="fieldgrid two"><div class="field"><label>Nombre completo</label><input id="sp-name" value="${esc(o.n||'')}"></div><div class="field"><label>RUT</label><input id="sp-rut" value="${esc(o.r||'')}" placeholder="12.345.678-9"></div></div>
+    <div class="card" id="sp-form"><div class="fieldgrid two"><div class="field"><label>${tu?'Nombre del tutor':'Nombre completo'}</label><input id="sp-name" value="${esc((tu?o.tu.n:o.n)||'')}"></div><div class="field"><label>${tu?'RUT del tutor':'RUT'}</label><input id="sp-rut" value="${esc((tu?o.tu.r:o.r)||'')}" placeholder="12.345.678-9"></div></div>
       <div style="margin-top:12px" id="sp-pad"></div>
       <label style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px"><input type="checkbox" id="sp-ok" style="accent-color:var(--gold);width:22px;height:22px;flex:none"> Declaro haber leído y acepto el consentimiento informado.</label>
       <div class="notice red hide" id="sp-err"></div>
@@ -3946,13 +3970,14 @@ function renderSignPage(o){
   const doSign=async()=>{
     if(!$('sp-ok').checked){toast('Marca la casilla de aceptación');return;}
     if(!window._pad.strokes.length){toast('Falta tu firma');return;}
-    const name=$('sp-name').value.trim()||o.n,rut=$('sp-rut').value.trim(),at=new Date().toISOString();
-    const text=fillConsent(o.t||DEFAULT_CONSENT,{...s,nombre:name,rut},g,new Date(at).toLocaleDateString('es-CL'));
+    const name=$('sp-name').value.trim()||(tu?o.tu.n:o.n),rut=$('sp-rut').value.trim(),at=new Date().toISOString();
+    if(tu&&!name){toast('Escribe el nombre del tutor');return;}
+    const text=tu?consentFor(o.t||DEFAULT_CONSENT,{...s,tutorNombre:name,tutorRut:rut},g,new Date(at).toLocaleDateString('es-CL')):consentFor(o.t||DEFAULT_CONSENT,{...s,nombre:name,rut},g,new Date(at).toLocaleDateString('es-CL'));
     const sig=window._pad.strokes.map(st=>st.slice());const code=await signCode({text,name,rut,at,sig});
-    const c={name,rut,at,sig,code,text,method:'remoto'};
-    const back=siteURL()+'#firma='+(await packObj({i:o.i,n:name,r:rut,at,s:sig,h:code,x:text}));
-    const notif=autoNotify(o,g,{i:o.i,n:name,r:rut,at,s:sig,h:code,x:text},back);
-    const subject=`Consentimiento firmado · ${name}`,body=`Hola, envío mi consentimiento informado firmado.\n\nNombre: ${name}\nRUT: ${rut||'—'}\nCódigo: ${code}\n\nLink para registrar la firma en el sistema:\n${back}`;
+    const c={name,rut,at,sig,code,text,method:'remoto',tutor:tu};const pl={i:o.i,n:name,r:rut,at,s:sig,h:code,x:text};if(tu)pl.tu=1;
+    const back=siteURL()+'#firma='+(await packObj(pl));
+    const notif=autoNotify(o,g,pl,back);
+    const subject=`Consentimiento firmado · ${tu?o.n+' (tutor: '+name+')':name}`,body=`Hola, envío ${tu?'el consentimiento informado de '+o.n+', firmado como su tutor/a':'mi consentimiento informado firmado'}.\n\nNombre: ${name}\nRUT: ${rut||'—'}\nCódigo: ${code}\n\nLink para registrar la firma en el sistema:\n${back}`;
     $('sp-form').classList.add('hide');
     $('sp-done').innerHTML=`<div class="card"><h3>¡Documento firmado!</h3><div id="sp-notif" class="notice" style="margin:0 0 14px">⏳ Enviando confirmación al gimnasio…</div><p class="desc">Guarda tu copia en PDF. Si el aviso automático falla, usa los botones de abajo.</p>
       <div class="verify" style="margin-bottom:14px"><img src="${qrDataURL(verifyText(c,g),3)}" alt="QR" style="background:#fff;border-radius:8px"><div class="small-note">Código de verificación<br><b style="color:#e8c25a;font-size:15px">${code}</b></div></div>
@@ -3979,7 +4004,7 @@ function pasteSignature(){
 function receiveSignature(o){
   {const f=findStudentFor(o);if(f)o.i=f.id;}
   let s=state.students.find(x=>x.id===o.i);
-  const c={name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text:o.x,method:'remoto'};
+  const c={name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text:o.x,method:'remoto',tutor:!!o.tu};
   const opts=state.students.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(x=>`<option value="${esc(x.id)}"${x.id===o.i||(!s&&normName(x.nombre)===normName(o.n))?' selected':''}>${esc(x.nombre)}</option>`).join('');
   openModal(`<div class="modal-head"><div><div class="eyebrow">Firma recibida</div><h3>${esc(o.n)}</h3><p class="desc" style="margin:4px 0 0">${new Date(o.at).toLocaleString('es-CL')} · Código ${esc(o.h)}</p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <img class="sig-img" src="${sigToPNG(o.s)}" alt="Firma" style="width:100%">
@@ -4051,8 +4076,8 @@ async function handleSigCipher(key,cipher){
   let plain=null;for(const k of [key,...allSigKeys()].filter(Boolean)){try{plain=await decStr(k,cipher);break;}catch(e){}}if(plain===null)throw new Error('ilegible');
   const o=await unpackObj(plain);const s=findStudentFor(o);
   if(!s){if(!(state.notifs||[]).some(x=>x.type==='huerfana'&&x.o?.h===o.h)){addNotif({type:'huerfana',title:`Firma recibida de ${o.n}`,text:`No encontré su ficha (RUT ${o.r||'—'}). Asígnala a un alumno o créalo.`,o});return {r:'nuevo',name:o.n};}return {r:'igual',name:o.n};}
-  o.i=s.id;const g=gym();const text=o.x||fillConsent(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g);
-  return {r:registerSignature(o.i,{name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto'},'remoto'),name:o.n};
+  o.i=s.id;const g=gym();const text=o.x||(o.tu?consentFor(g.texto,{...s,tutorNombre:o.n,tutorRut:o.r},g):consentFor(g.texto,{...s,nombre:o.n,rut:o.r||s.rut},g));
+  return {r:registerSignature(o.i,{name:o.n,rut:o.r,at:o.at,sig:o.s,code:o.h,text,method:'remoto',tutor:!!o.tu},'remoto'),name:o.tu?(s.nombre+' (tutor: '+o.n+')'):o.n};
 }
 let polling=false;
 async function pollSignatures(manual,fromWatch){
@@ -4093,13 +4118,13 @@ function askNotifPerm(){if(window.Notification&&Notification.permission==='defau
 /* --- PDF consentimiento --- */
 function consentBody(s,g,c,gsig){
   if(gsig===undefined)gsig=gymSigURL();
-  const text=c?.text||fillConsent(g.texto||DEFAULT_CONSENT,s,g);
+  const text=c?.text||consentFor(g.texto||DEFAULT_CONSENT,s,g);
   return `<div class="report-grid">${box('Gimnasio',[g.nombre,g.rut,g.direccion].filter(Boolean).join(' · '))}${box('Contacto',[g.responsable,g.telefono,g.correo].filter(Boolean).join(' · ')||'—')}</div>
     <div class="report-grid">${box('Fecha de registro del alumno',s.fechaRegistro?fdate(s.fechaRegistro):(c?new Date(c.at).toLocaleDateString('es-CL'):'—'))}${box('Fecha de firma',c?new Date(c.at).toLocaleString('es-CL'):'Pendiente')}</div>
     <div class="report-box" style="white-space:pre-wrap;font-size:13px;line-height:1.65;background:#fafafa;padding:16px 18px">${esc(text)}</div>
     <h4>Firmas</h4>
     <div class="report-grid">
-      <div class="report-box" style="white-space:normal;background:#fff;border:1px solid #ddd;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end">${c?`<img src="${sigToPNG(c.sig)}" style="width:100%;max-width:300px;max-height:95px;object-fit:contain;display:block;margin:0 auto">`:''}<div style="border-top:1px solid #333;margin-top:4px;padding-top:4px"><b style="margin:0">${esc(c?.name||s.nombre)}</b>RUT ${esc(c?.rut||s.rut||'____________')}<br><span style="color:#666">Firma del alumno</span></div></div>
+      <div class="report-box" style="white-space:normal;background:#fff;border:1px solid #ddd;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end">${c?`<img src="${sigToPNG(c.sig)}" style="width:100%;max-width:300px;max-height:95px;object-fit:contain;display:block;margin:0 auto">`:''}<div style="border-top:1px solid #333;margin-top:4px;padding-top:4px">${(()=>{const tu=c?c.tutor:isMinor(s);return `<b style="margin:0">${esc(c?.name||(tu?s.tutorNombre:s.nombre)||'')}</b>RUT ${esc(c?.rut||(tu?s.tutorRut:s.rut)||'____________')}<br><span style="color:#666">${tu?'Firma del tutor legal, en representación de '+esc(s.nombre):'Firma del alumno'}</span>`;})()}</div></div>
       <div class="report-box" style="white-space:normal;background:#fff;border:1px solid #ddd;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end">${gsig?`<img src="${gsig}" style="width:100%;max-width:300px;max-height:95px;object-fit:contain;display:block;margin:0 auto">`:''}<div style="border-top:1px solid #333;margin-top:4px;padding-top:4px"><b style="margin:0">${esc(g.responsable||g.nombre)}</b>${esc(g.nombre)}${g.rut?' · '+esc(g.rut):''}<br><span style="color:#666">Firma del gimnasio</span></div></div>
     </div>
     ${c?`<div class="report-box" style="white-space:normal;display:flex;gap:12px;align-items:center;margin-top:4px"><img src="${qrDataURL(verifyText(c,g),3)}" style="width:100px;height:100px;image-rendering:pixelated;flex:none"><div><b>Firma electrónica simple · verificación</b>${c.method==='remoto'?'Firmado a distancia (link/QR)':'Firmado en forma presencial'} el ${new Date(c.at).toLocaleString('es-CL')}<br>Código: <b style="display:inline">${esc(c.code)}</b></div></div>`:''}`;
