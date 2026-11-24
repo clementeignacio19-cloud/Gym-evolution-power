@@ -597,6 +597,12 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 .btn .bi{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sign-actions{display:grid;gap:8px}
+.sign-actions>.btn.green{width:100%;justify-content:center;min-height:46px;font-size:16px}
+.send-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.send-grid .btn{justify-content:center;gap:7px;min-height:44px;white-space:nowrap}
+.send-grid .btn .bi{color:var(--gold)}
+@media(max-width:560px){.send-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -703,10 +709,8 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
               <div class="rowhead" style="margin-bottom:8px"><div><h4 style="margin:0">Consentimiento informado</h4><p class="desc" style="margin:2px 0 0">Se completa con los datos de la ficha. El alumno lo firma aquí o desde su celular (correo o QR).</p></div><span id="consent-status"></span></div>
               <div class="consent-text" id="consent-preview"></div>
               <label class="consent-check" id="consent-sig-view"></label>
-              <div class="actions" style="margin-top:12px">
-                <button class="btn sm green" type="button" onclick="consentAction('sign')">Firmar aquí</button>
-                <button class="btn sm wa" type="button" onclick="consentAction('wa')">Enviar por WhatsApp</button><button class="btn sm primary" type="button" onclick="consentAction('mail')">Enviar por correo</button>
-                <button class="btn sm secondary" type="button" onclick="consentAction('qr')">Firmar con QR</button>
+              <div class="sign-actions" style="margin-top:12px"><button class="btn sm green" type="button" onclick="consentAction('sign')">Firmar aquí</button><div class="send-grid"><button class="btn sm secondary" type="button" onclick="consentAction('wa',this)"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4A8 8 0 1 1 8.5 19z"/><path d="M9.5 9.5c0 2.5 2.5 5 5 5l1-1.5-2-1-1 1c-1-.4-1.6-1-2-2l1-1-1-2z"/></svg>WhatsApp</button><button class="btn sm secondary" type="button" onclick="consentAction('mail',this)"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>Correo</button><button class="btn sm secondary" type="button" onclick="consentAction('qr',this)"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg>QR</button><button class="btn sm secondary" type="button" onclick="consentAction('link',this)"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>Copiar link</button></div></div>
+              <div class="actions" style="margin-top:10px">
                 <button class="btn sm secondary" type="button" onclick="consentAction('pdf',this)">Descargar PDF</button>
                 <button class="btn sm ghost" type="button" onclick="consentAction('print')">Imprimir</button>
               </div>
@@ -3668,6 +3672,14 @@ function saveStudentKeep(){
 async function consentAction(act,btn,sid){
   const s=sid?state.students.find(x=>x.id===sid):saveStudentKeep();if(!s)return;const g=gym();
   if(act==='sign')return openSignModal(s.id);
+  if(act==='link'){
+    const lp=signLink(s);
+    const ok=()=>toast('Link de firma copiado. Pégalo donde quieras enviarlo');
+    try{
+      if(window.ClipboardItem&&navigator.clipboard?.write){await navigator.clipboard.write([new ClipboardItem({'text/plain':lp.then(l=>new Blob([l],{type:'text/plain'}))})]);ok();return;}
+      const l=await lp;await navigator.clipboard.writeText(l);ok();return;
+    }catch(e){const l=await lp;try{await navigator.clipboard.writeText(l);ok();}catch(_){prompt('Copia el link:',l);}return;}
+  }
   if(act==='wa'){
     const ph=String(s.telefono||'').replace(/\D/g,'');
     if(ph.length<8){toast('Agrega el teléfono del alumno en la ficha (ej. +56 9 1234 5678)');if($('student-form').elements.telefono){$('student-form-card')?.classList.remove('hide');$('student-form').elements.telefono.focus();}return;}
@@ -3684,13 +3696,11 @@ async function consentAction(act,btn,sid){
       const subject=`Consentimiento informado · ${g.nombre}`;
       const body=`Hola ${s.nombre.split(' ')[0]}:\n\nBienvenido/a a ${g.nombre}. Para completar tu inscripción, revisa y firma el consentimiento informado desde tu celular en este link:\n\n${link}\n\nAl firmar podrás descargar tu copia en PDF y se enviará la firma al gimnasio.\n\nSaludos,\n${g.responsable||g.nombre}${g.telefono?'\n'+g.telefono:''}`;
       const i=state.students.findIndex(x=>x.id===s.id);state.students[i].consentSent=new Date().toISOString();addNotif({type:'enviado',sid:s.id,title:`Consentimiento enviado a ${s.nombre}`,text:`Link de firma enviado a ${s.correo}.`,read:true});persist();renderConsentPanel();
-      openModal(`<div class="modal-head"><div><div class="eyebrow">Enviar por correo</div><h3>${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">Para: <b>${esc(s.correo)}</b></p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      openModal(`<div class="modal-head"><div><div class="eyebrow">¿Con qué app envías el correo?</div><h3>${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">Para: <b>${esc(s.correo)}</b></p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <div class="actions" style="flex-direction:column;align-items:stretch">
           <a class="btn primary" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(s.correo)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Abrir en Gmail</a>
           <a class="btn secondary" href="mailto:${encodeURIComponent(s.correo)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Abrir en mi app de correo</a>
-          ${s.telefono?`<a class="btn green" target="_blank" rel="noopener" href="https://wa.me/${String(s.telefono).replace(/\D/g,'')}?text=${encodeURIComponent(body)}">Enviar por WhatsApp</a>`:''}
-          <button class="btn ghost" type="button" onclick="copyText(this.dataset.l)" data-l="${esc(link)}">Copiar link de firma</button>
-        </div><p class="small-note" style="margin-top:12px">Cuando el alumno firme, te llega un correo de confirmación y su ficha se actualiza sola (✍️ Consentimiento firmado) al abrir el sistema.</p>`);
+        </div><p class="small-note" style="margin-top:12px">Cuando el alumno firme, te llega un correo de confirmación y su ficha se actualiza sola al abrir el sistema.</p>`);
       return;
     }
     openModal(`<div class="modal-head"><div><div class="eyebrow">Firma con QR</div><h3>${esc(s.nombre)}</h3><p class="desc" style="margin:4px 0 0">El alumno escanea con la cámara de su celular, lee y firma.</p></div><button class="btn sm ghost" type="button" onclick="closeModal()" aria-label="Cerrar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -3823,7 +3833,7 @@ function renderFirmas(){
       <div class="actions"><button class="btn sm secondary" type="button" onclick="viewConsent('${id}')">Ver</button><button class="btn sm primary" type="button" onclick="downloadPDF('${id}','consentimiento',null,this)">PDF</button></div></div>`;
     return `<div class="cf-card"><div class="cf-top"><div><b>${esc(s.nombre)}</b><div class="small-note">RUT ${esc(s.rut||'—')}${s.correo?' · '+esc(s.correo):''}</div></div>${s.consentSent?'<span class="tag gold">📧 Enviado</span>':'<span class="tag red">Pendiente</span>'}</div>
       <div class="cf-meta">${s.consentSent?'Link enviado el '+new Date(s.consentSent).toLocaleString('es-CL'):'Aún no se ha enviado el consentimiento.'}</div>
-      <div class="actions"><button class="btn sm green" type="button" onclick="openSignModal('${id}')">Firmar aquí</button><button class="btn sm wa" type="button" onclick="consentAction('wa',this,'${id}')">WhatsApp</button><button class="btn sm primary" type="button" onclick="consentAction('mail',this,'${id}')">Correo</button><button class="btn sm secondary" type="button" onclick="consentAction('qr',this,'${id}')">QR</button></div></div>`;
+      <div class="sign-actions"><button class="btn sm green" type="button" onclick="openSignModal('${id}')">Firmar aquí</button><div class="send-grid"><button class="btn sm secondary" type="button" onclick="consentAction('wa',this,'${id}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4A8 8 0 1 1 8.5 19z"/><path d="M9.5 9.5c0 2.5 2.5 5 5 5l1-1.5-2-1-1 1c-1-.4-1.6-1-2-2l1-1-1-2z"/></svg>WhatsApp</button><button class="btn sm secondary" type="button" onclick="consentAction('mail',this,'${id}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>Correo</button><button class="btn sm secondary" type="button" onclick="consentAction('qr',this,'${id}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg>QR</button><button class="btn sm secondary" type="button" onclick="consentAction('link',this,'${id}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>Copiar link</button></div></div></div>`;
   }).join(''):`<div class="empty" style="grid-column:1/-1">${all.length?'Sin resultados.':'Aún no hay alumnos registrados.'}</div>`;
 }
 function viewConsent(sid){
