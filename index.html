@@ -67,7 +67,7 @@ img{max-width:100%;display:block}
 .hero-content h3{margin:8px 0 0;font-size:clamp(32px,5vw,56px);line-height:.98;letter-spacing:-2px;text-shadow:0 8px 24px rgba(0,0,0,.65)}
 .hero-content p{margin:14px 0 0;color:#d7d9df;font-size:16px;max-width:600px}
 .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
-.photo-banner{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:flex-end;min-height:220px;padding:28px 32px;margin-bottom:18px;border-radius:24px;border:1px solid #37312a;box-shadow:0 18px 48px rgba(0,0,0,.3);background-color:#121316}
+.photo-banner{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:flex-end;min-height:170px;padding:28px 32px;margin-bottom:18px;border-radius:24px;border:1px solid #37312a;box-shadow:0 18px 48px rgba(0,0,0,.3);background-color:#121316}
 .photo-banner::before{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,rgba(2,2,3,.94),rgba(2,2,3,.62) 53%,rgba(2,2,3,.14)),var(--photo);background-size:cover;background-position:center,center 45%,center;background-repeat:no-repeat}
 .photo-banner::after{content:"";position:absolute;z-index:-1;inset:auto 0 0;height:5px;background:linear-gradient(90deg,var(--gold),rgba(213,178,95,0))}
 .photo-banner .photo-copy{max-width:570px}
@@ -226,6 +226,68 @@ td{font-size:13px;color:#edf1f5}
 .cf-sigs small{position:absolute;bottom:3px;left:0;right:0;text-align:center;color:#888;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
 .cf-meta{font-size:12px;color:#a4a9b3;line-height:1.5}
 .cf-meta b{color:#f1d38e}
+.sl-head{margin-bottom:16px}
+.sl-tools{display:grid;grid-template-columns:1fr 230px;gap:10px}
+.sl-sort{background:#0b0c0e;border:1px solid #262931;color:#fff;border-radius:13px;padding:10px 12px;min-height:44px}
+.fchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.fchip{border:1px solid #2a2d33;background:#111214;color:#cfd3da;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;display:inline-flex;gap:6px;align-items:center}
+.fchip b{background:#1d1f24;border-radius:99px;padding:1px 7px;font-size:11px}
+.fchip.on{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111;border-color:transparent}.fchip.on b{background:rgba(0,0,0,.15)}
+.fchip.warn b{background:rgba(255,107,107,.18);color:#ffb3b3}.fchip.on.warn b{color:#111}
+.student-form-card{position:relative;margin-bottom:18px;border-color:#3a3427}
+.sf-close{position:absolute;top:16px;right:16px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.scard{position:relative;background:linear-gradient(180deg,#121316,#0c0c0e);border:1px solid #24262b;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;cursor:pointer;transition:.18s;min-width:0}
+.scard:hover{border-color:#4a4334;transform:translateY(-2px);box-shadow:0 14px 34px rgba(0,0,0,.4)}
+.scard.alert{border-color:rgba(255,107,107,.35)}
+.s-top{display:flex;gap:12px;align-items:center;min-width:0}
+.avatar{width:46px;height:46px;flex:none;border-radius:15px;display:grid;place-items:center;font-weight:900;font-size:16px;color:#111;background:var(--av,linear-gradient(135deg,var(--gold2),var(--gold)))}
+.avatar.lg{width:64px;height:64px;border-radius:20px;font-size:22px}
+.s-name{min-width:0;flex:1}.s-name b{display:block;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s-name span{font-size:12px;color:#9aa1ab;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.s-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.s-stats div{background:#0e0f11;border:1px solid #202227;border-radius:12px;padding:8px 9px;min-width:0}
+.s-stats small{display:block;font-size:10px;color:#8f96a0;font-weight:800;letter-spacing:.6px;text-transform:uppercase}
+.s-stats strong{display:block;font-size:15px;margin-top:2px;white-space:nowrap}
+.s-badges{display:flex;gap:5px;flex-wrap:wrap}
+.sb{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid}
+.sb.ok{color:#8cf0c4;border-color:rgba(48,211,139,.3);background:rgba(48,211,139,.08)}
+.sb.no{color:#ffb3b3;border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.07)}
+.sb.mid{color:#f1d38e;border-color:rgba(213,178,95,.3);background:rgba(213,178,95,.08)}
+.s-actions{display:flex;gap:6px;margin-top:auto}
+.s-actions .btn{flex:1}
+.s-menu{position:absolute;top:12px;right:12px}
+.dd{position:absolute;right:0;top:36px;z-index:20;background:#15161a;border:1px solid #2c2e35;border-radius:14px;padding:6px;min-width:190px;box-shadow:var(--shadow);display:grid}
+.dd button,.dd a{background:none;border:0;color:#e6e9ee;text-align:left;padding:9px 11px;border-radius:9px;font-weight:700;font-size:13px}
+.dd button:hover,.dd a:hover{background:#1f2126}
+.dd .danger{color:#ff9b9b}
+/* ===== dashboard ===== */
+.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin:4px 0 16px}
+.hello h3{margin:0;font-size:26px;letter-spacing:-.8px}.hello p{margin:2px 0 0;color:var(--muted)}
+.qa{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+.qa button{background:linear-gradient(180deg,#141518,#0d0d0f);border:1px solid #26282e;border-radius:18px;padding:16px 12px;color:#fff;font-weight:800;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:8px;transition:.15s}
+.qa button:hover{border-color:#4a4334;transform:translateY(-2px)}
+.qa button span{font-size:24px}
+.metric.click{cursor:pointer;transition:.15s}.metric.click:hover{border-color:#4a4334;transform:translateY(-2px)}
+.todo{display:grid;gap:8px}
+.todo-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#0f1013;border:1px solid #23252b;cursor:pointer;transition:.15s}
+.todo-item:hover{border-color:#4a4334}
+.todo-item .n{min-width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:900;background:#1a1b1f}
+.todo-item.red .n{background:rgba(255,107,107,.15);color:#ff9b9b}.todo-item.gold .n{background:rgba(213,178,95,.15);color:#f1d38e}.todo-item.green .n{background:rgba(48,211,139,.13);color:#69f2b6}
+.todo-item b{display:block;font-size:13.5px}.todo-item small{color:#8f96a0;font-size:12px}
+.agenda-row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid #1e2025;cursor:pointer}
+.agenda-row:last-child{border-bottom:0}
+.agenda-date{width:52px;flex:none;text-align:center;border-radius:12px;padding:6px 0;background:#141518;border:1px solid #26282e}
+.agenda-date b{display:block;font-size:17px;line-height:1}.agenda-date small{font-size:10px;color:#9aa1ab;text-transform:uppercase;font-weight:800}
+.agenda-row.late .agenda-date{border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.08)}
+.agenda-row.soon .agenda-date{border-color:rgba(213,178,95,.4);background:rgba(213,178,95,.08)}
+.ficha-head{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.ficha-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.ficha-kpis div{background:#0e0f11;border:1px solid #23252b;border-radius:14px;padding:10px 12px}
+.ficha-kpis small{display:block;font-size:10.5px;color:#8f96a0;font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+.ficha-kpis strong{font-size:18px}
+@media(max-width:900px){.hello .cloud-badge{display:none}.qa{grid-template-columns:repeat(3,1fr)}.sl-tools{grid-template-columns:1fr}.sl-sort{font-size:16px}}
+@media(max-width:560px){.qa{grid-template-columns:repeat(2,1fr)}.qa button:last-child{grid-column:span 2}.ficha-kpis{grid-template-columns:repeat(2,1fr)}.sgrid{grid-template-columns:1fr}.sf-close{position:static;margin-bottom:10px}}
 .login{position:fixed;inset:0;z-index:300;background:radial-gradient(circle at top,#17181b,#050505 70%);display:grid;place-items:center;padding:20px}
 .login-box{width:100%;max-width:400px;background:linear-gradient(180deg,#121316,#0b0b0d);border:1px solid #2c2e35;border-radius:24px;padding:26px;box-shadow:var(--shadow)}
 .cloud-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;padding:6px 10px;border-radius:999px;background:#101114;border:1px solid #24262b;color:#9ff3cc;cursor:default;white-space:nowrap}
@@ -438,7 +500,7 @@ td{font-size:13px;color:#edf1f5}
   <aside class="sidebar">
     <div class="brand"><div class="brand-badge">EP</div><div><h1>EVOLUTION POWER</h1><small>Nutrition · Training · Performance</small></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="sidebar-card"><h3>💾 Respaldo</h3><p style="margin-bottom:10px">Los datos se guardan en este navegador. Descarga un respaldo seguido.</p>
+    <div class="sidebar-card"><h3>💾 Respaldo</h3><p style="margin-bottom:10px">Tus datos están en la nube. Si quieres, descarga una copia extra.</p>
       <div class="actions"><button class="btn sm secondary" onclick="backup()">Descargar</button><button class="btn sm ghost" onclick="openRecovery()">Restaurar</button></div></div>
     <div class="sidebar-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px"><span class="cloud-badge" data-cloud>☁️</span><button class="btn sm ghost" type="button" onclick="CLOUD.session?logout():showLogin()" title="Sesión">👤</button></div>
     <div class="sidebar-foot">Evolution Power · Laguna Verde / Valparaíso</div>
@@ -461,37 +523,30 @@ td{font-size:13px;color:#edf1f5}
 
     <!-- ================= INICIO ================= -->
     <section id="view-dashboard" class="view">
-      <div class="hero">
-        <div class="hero-content">
-          <div class="eyebrow">Evolution Power · Laguna Verde</div>
-          <h3>Fuerza. Nutrición. Evolución.</h3>
-          <p>Ficha de alumnos, evaluación con progreso, calculadora de macros, pauta alimentaria con horarios y suplementación, rutina semanal e informes PDF.</p>
-          <div class="hero-actions">
-            <button class="btn primary" onclick="go('evaluacion')">+ Nueva evaluación</button>
-            <button class="btn secondary" onclick="go('plan')">🥗 Calcular macros</button>
-          </div>
-        </div>
+      <div class="hello"><div><h3 id="hello-title">Hola 👋</h3><p id="hello-sub">Resumen de tu gimnasio hoy.</p></div><span class="cloud-badge" data-cloud>☁️</span></div>
+      <div class="qa">
+        <button type="button" onclick="newStudent()"><span>➕</span>Nuevo alumno</button>
+        <button type="button" onclick="go('evaluacion')"><span>📋</span>Evaluar</button>
+        <button type="button" onclick="go('plan')"><span>🥗</span>Pauta / macros</button>
+        <button type="button" onclick="go('entrenamiento')"><span>🏋️</span>Rutina</button>
+        <button type="button" onclick="go('firmas')"><span>✍️</span>Firmas</button>
       </div>
-
       <div class="metrics">
-        <div class="metric"><div class="metric-top"><div><span>Alumnos</span><strong id="stat-students">0</strong></div><div class="dot">👥</div></div><span>Fichas registradas.</span></div>
-        <div class="metric"><div class="metric-top"><div><span>Evaluaciones</span><strong id="stat-evals">0</strong></div><div class="dot">📋</div></div><span>Controles guardados.</span></div>
-        <div class="metric"><div class="metric-top"><div><span>Pautas</span><strong id="stat-plans">0</strong></div><div class="dot">🥗</div></div><span>Planes con macros.</span></div>
-        <div class="metric"><div class="metric-top"><div><span>Rutinas</span><strong id="stat-workouts">0</strong></div><div class="dot">🏋️</div></div><span>Planes semanales.</span></div>
+        <div class="metric click" onclick="go('alumnos')"><div class="metric-top"><div><span>Alumnos</span><strong id="stat-students">0</strong></div><div class="dot">👥</div></div><span>Fichas registradas.</span></div>
+        <div class="metric click" onclick="go('evaluacion')"><div class="metric-top"><div><span>Evaluaciones</span><strong id="stat-evals">0</strong></div><div class="dot">📋</div></div><span>Controles guardados.</span></div>
+        <div class="metric click" onclick="go('plan')"><div class="metric-top"><div><span>Pautas</span><strong id="stat-plans">0</strong></div><div class="dot">🥗</div></div><span>Planes con macros.</span></div>
+        <div class="metric click" onclick="go('entrenamiento')"><div class="metric-top"><div><span>Rutinas</span><strong id="stat-workouts">0</strong></div><div class="dot">🏋️</div></div><span>Planes semanales.</span></div>
       </div>
 
       <div class="grid">
-        <div class="card">
-          <div class="rowhead"><div><h3>Últimas evaluaciones</h3><p class="desc" style="margin:0">Actividad reciente y variación de peso.</p></div><button class="btn ghost sm" onclick="go('evaluacion')">Agregar</button></div>
-          <div id="recent-evals"></div>
+        <div class="stack">
+          <div class="card"><div class="rowhead"><div><h3>✅ Pendientes</h3><p class="desc" style="margin:0">Toca para ver a quiénes les falta.</p></div></div><div class="todo" id="todo-list"></div></div>
+          <div class="card"><div class="rowhead"><div><h3>📋 Últimas evaluaciones</h3><p class="desc" style="margin:0">Actividad reciente y variación de peso.</p></div><button class="btn ghost sm" onclick="go('evaluacion')">+ Evaluar</button></div><div id="recent-evals"></div></div>
         </div>
         <div class="stack">
-          <div class="banner-mini"><div><h4>ENTRENA. SUPÉRATE. EVOLUCIONA.</h4><p>Todo el seguimiento de tus alumnos en un solo lugar, desde el celular o el computador.</p></div></div>
-          <div class="card">
-            <h3>Respaldo de datos</h3>
-            <p class="desc">La información vive en este navegador (localStorage). Descarga un respaldo para pasar los datos a otro equipo o no perderlos.</p>
-            <div class="actions"><button class="btn primary sm" onclick="backup()">💾 Descargar respaldo</button><button class="btn secondary sm" onclick="openRecovery()">🛟 Recuperar / restaurar</button></div>
-          </div>
+          <div class="card"><div class="rowhead"><div><h3>📅 Agenda de controles</h3><p class="desc" style="margin:0">Próximos controles y atrasados.</p></div></div><div id="agenda"></div></div>
+          <div class="card"><h3>☁️ Datos</h3><p class="desc">Todo se guarda en la nube y se sincroniza entre tus dispositivos. Igual puedes descargar un respaldo.</p>
+            <div class="actions"><button class="btn secondary sm" onclick="backup()">💾 Descargar respaldo</button><button class="btn ghost sm" onclick="openRecovery()">🛟 Recuperar</button></div></div>
         </div>
       </div>
     </section>
@@ -499,8 +554,19 @@ td{font-size:13px;color:#edf1f5}
     <!-- ================= ALUMNOS ================= -->
     <section id="view-alumnos" class="view hide">
       <div class="photo-banner alumnos no-print"><div class="photo-copy"><div class="eyebrow">Evolution Power · Laguna Verde</div><h3>TU COMUNIDAD, TU FUERZA</h3><p>Cada atleta tiene una historia. Registra sus objetivos y lleva su evolución al siguiente nivel.</p></div></div>
-      <div class="grid">
-        <div class="card">
+      <div class="card sl-head">
+        <div class="rowhead" style="margin-bottom:10px"><div><h3>👥 Alumnos <span class="tag gold" id="student-count" style="vertical-align:middle;margin-left:6px">0</span></h3><p class="desc" style="margin:0">Toca una tarjeta para abrir la ficha completa.</p></div>
+          <div class="actions"><button class="btn primary" type="button" onclick="newStudent()">➕ Nuevo alumno</button><button class="btn secondary sm" type="button" onclick="pollSignatures(true)">🔄 Firmas</button><button class="btn secondary sm" type="button" onclick="openMerge()">🔗 Unificar</button></div></div>
+        <div id="dup-banner"></div>
+        <div class="sl-tools">
+          <div class="search" style="margin:0"><input id="student-search" placeholder="Buscar por nombre, RUT, teléfono u objetivo..."></div>
+          <select id="student-sort" class="sl-sort"><option value="name">Orden: Nombre A–Z</option><option value="recent">Orden: Registro más reciente</option><option value="control">Orden: Último control</option><option value="due">Orden: Control más atrasado</option></select>
+        </div>
+        <div class="fchips" id="student-filters"></div>
+      </div>
+      <div class="card student-form-card hide" id="student-form-card">
+        <button class="btn sm ghost sf-close" type="button" onclick="closeStudentForm()">✕ Cerrar</button>
+
           <div class="rowhead"><div><h3 id="student-form-title">Registrar alumno</h3><p class="desc" style="margin:0">Ficha base para controles, pautas y rutinas.</p></div><div class="tag" id="student-count">0 alumno(s)</div></div>
           <form id="student-form">
             <input type="hidden" name="id">
@@ -534,14 +600,8 @@ td{font-size:13px;color:#edf1f5}
             <div class="sep"></div>
             <div class="actions"><button class="btn primary" type="submit" id="student-submit">Guardar alumno</button><button class="btn secondary" type="button" onclick="resetStudentForm()">Limpiar</button><button class="btn danger hide" type="button" id="student-delete" onclick="deleteStudent($('student-form').elements.id.value)">🗑 Eliminar alumno</button></div>
           </form>
-        </div>
-        <div class="card">
-          <div class="rowhead"><div><h3>Base de alumnos</h3><p class="desc" style="margin:0">Abre la ficha completa para ver y editar todo.</p></div><div class="actions"><button class="btn secondary sm" type="button" onclick="pollSignatures(true)">🔄 Revisar firmas</button><button class="btn secondary sm" type="button" onclick="openMerge()">🔗 Unificar alumnos</button></div></div>
-          <div id="dup-banner"></div>
-          <div class="search"><input id="student-search" placeholder="Buscar alumno..."></div>
-          <div class="table-wrap"><table class="rt"><thead><tr><th>Alumno</th><th>Edad</th><th>Objetivo</th><th>Último peso</th><th>Acciones</th></tr></thead><tbody id="student-rows"></tbody></table></div>
-        </div>
       </div>
+      <div class="sgrid" id="student-grid"></div>
           <details class="card" id="gym-config" style="margin-top:18px">
         <summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h3 style="margin:0">🏢 Datos del gimnasio y texto del consentimiento</h3><p class="desc" style="margin:4px 0 0">Aparecen en el consentimiento, el correo y el PDF firmado.</p></div><span class="tag gold">Editar</span></summary>
         <div class="sep" style="margin:16px 0"></div>
@@ -3188,7 +3248,7 @@ function go(view){
   currentView=view;
   VIEWS.forEach(([v])=>$('view-'+v).classList.toggle('hide',v!==view));
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
-  $('page-title').textContent=titles[view][0];$('page-sub').textContent=titles[view][1];
+  document.querySelector('.topbar').classList.toggle('hide',view==='dashboard');$('page-title').textContent=titles[view][0];$('page-sub').textContent=titles[view][1];
   if(view==='informe'){drawReport();renderQuick();}
   if(view==='firmas'){renderFirmas();pollSignatures();}
   if(view==='notifs'){renderNotifs();pollSignatures();}
@@ -3210,7 +3270,7 @@ function render(){
   ['eval-student','plan-student','workout-student','report-student'].forEach(id=>setStudentOptions(id));
   $('stat-students').textContent=state.students.length;$('stat-evals').textContent=state.evals.length;
   $('stat-plans').textContent=state.plans.length;$('stat-workouts').textContent=state.workouts.length;
-  $('student-count').textContent=state.students.length+' alumno(s)';
+  renderDashboard();
   renderStudents();renderDupBanner();renderFirmas();renderNotifs();renderBadges();
   const rec=state.evals.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).slice(0,6);
   $('recent-evals').innerHTML=rec.length?'<div class="table-wrap"><table class="rt"><thead><tr><th>Alumno</th><th>Fecha</th><th>Peso</th><th>Variación</th></tr></thead><tbody>'+rec.map(e=>{
@@ -3219,27 +3279,76 @@ function render(){
     :'<div class="empty">Todavía no hay evaluaciones guardadas.</div>';
   drawReport();
 }
+function renderDashboard(){
+  if(!$('todo-list'))return;
+  const h=new Date().getHours();const nm=(gym().responsable||'').split(' ')[0];
+  $('hello-title').textContent=(h<12?'Buenos días':h<20?'Buenas tardes':'Buenas noches')+(nm?', '+nm:'')+' 👋';
+  $('hello-sub').textContent=new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})+' · '+state.students.length+' alumno(s)';
+  const all=state.students.map(s=>({s,st:studentStatus(s)}));const c=k=>all.filter(x=>sMatch(x.s,x.st,k)).length;
+  const items=[['nofirma','Consentimientos sin firmar','Envía el link o QR desde su tarjeta',c('nofirma'),'red'],['late','Controles atrasados','Más de 35 días o fecha vencida',c('late'),'red'],['noeval','Sin evaluación inicial','Agenda su primera medición',c('noeval'),'gold'],['noplan','Sin pauta nutricional','Calcula sus macros',c('noplan'),'gold'],['nowork','Sin rutina semanal','Arma su plan de entrenamiento',c('nowork'),'gold']];
+  const pend=items.filter(x=>x[3]);
+  $('todo-list').innerHTML=pend.length?pend.map(([k,t,d,n,col])=>`<div class="todo-item ${col}" onclick="sFilter='${k}';go('alumnos');renderStudents()"><div class="n">${n}</div><div style="flex:1"><b>${t}</b><small>${d}</small></div><span style="color:#6f7680">›</span></div>`).join('')
+    :`<div class="todo-item green"><div class="n">✓</div><div><b>¡Todo al día!</b><small>No hay pendientes.</small></div></div>`;
+  const ag=state.students.map(s=>({s,nc:nextControlOf(s.id)})).filter(x=>x.nc).sort((a,b)=>a.nc.localeCompare(b.nc)).slice(0,8);
+  const t0=today(),wk=new Date(Date.now()+7*864e5).toLocaleDateString('en-CA');
+  $('agenda').innerHTML=ag.length?ag.map(({s,nc})=>{const d=new Date(nc+'T12:00:00');const cls=nc<t0?'late':nc<=wk?'soon':'';
+    return `<div class="agenda-row ${cls}" onclick="openFicha('${esc(s.id)}')"><div class="agenda-date"><small>${d.toLocaleDateString('es-CL',{month:'short'}).replace('.','')}</small><b>${d.getDate()}</b></div><div class="avatar" style="--av:${avColor(s.id)};width:34px;height:34px;border-radius:11px;font-size:12px">${esc(initials(s.nombre))}</div><div style="flex:1;min-width:0"><b style="font-size:13.5px">${esc(s.nombre)}</b><div class="small-note">${nc<t0?'⚠ Atrasado':nc===t0?'Hoy':nc<=wk?'Esta semana':'Próximo'} · ${fdate(nc)}</div></div><span style="color:#6f7680">›</span></div>`;}).join('')
+    :'<div class="empty">Sin controles agendados. Al guardar una evaluación o pauta, pon la fecha de "Próximo control".</div>';
+}
 function deltaHTML(d){if(d===null)return '<span class="tag gold">Inicial</span>';const c=Math.abs(d)<0.05?'eq':d>0?'up':'down';return `<span class="delta ${c}">${d>0?'▲ +':d<0?'▼ ':'= '}${fmt(d,1)} kg</span>`;}
 
-function renderStudents(){
-  const q=($('student-search').value||'').toLowerCase().trim();
-  const list=state.students.filter(s=>!q||s.nombre.toLowerCase().includes(q)||(s.objetivo||'').toLowerCase().includes(q));
-  $('student-rows').innerHTML=list.length?list.map(s=>{const le=lastEval(s.id);return `
-    <tr><td data-l="Alumno"><div><b>${esc(s.nombre)}</b><br><span style="color:#8f96a0;font-size:12px">${esc(s.correo||s.telefono||'Sin contacto')}</span>${healthFlags(s)}<div>${s.consent?'<span class="tag" style="margin-top:4px;font-size:10px">✍️ Consentimiento firmado</span>':'<span class="tag gold" style="margin-top:4px;font-size:10px">✍️ Firma pendiente</span>'}</div></div></td>
-    <td data-l="Edad">${esc(s.edad||'—')}</td><td data-l="Objetivo">${esc(s.objetivo)}</td><td data-l="Último peso">${le?esc(le.peso)+' kg':'—'}</td>
-    <td class="full"><div class="student-actions">
-      <button class="btn sm primary" data-act="ficha" data-id="${esc(s.id)}">📂 Ficha</button>
-      <button class="btn sm green" data-act="eval" data-id="${esc(s.id)}">Evaluar</button>
-      <button class="btn sm secondary" data-act="plan" data-id="${esc(s.id)}">🥗 Pauta</button>
-      <button class="btn sm secondary" data-act="work" data-id="${esc(s.id)}">🏋️ Rutina</button>
-      <button class="btn sm ghost icon" data-act="edit" data-id="${esc(s.id)}" title="Editar">✏️</button>
-      <button class="btn sm danger" data-act="del" data-id="${esc(s.id)}" title="Eliminar alumno">🗑 Eliminar</button>
-    </div></td></tr>`;}).join(''):`<tr><td colspan="5" class="empty full">${q?'Sin resultados.':'No hay alumnos registrados todavía.'}</td></tr>`;
+let sFilter='all';
+const AV_COLORS=['linear-gradient(135deg,#ffde8a,#d5b25f)','linear-gradient(135deg,#7ee8c4,#30d38b)','linear-gradient(135deg,#9fd8ff,#4fc3ff)','linear-gradient(135deg,#ffb38a,#ff8a5c)','linear-gradient(135deg,#d7b8ff,#a37bff)','linear-gradient(135deg,#ff9fbf,#ff6b9a)'];
+const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const avColor=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))>>>0;return AV_COLORS[h%AV_COLORS.length];};
+const daysSince=d=>d?Math.floor((Date.now()-Date.parse(d+'T12:00:00'))/864e5):null;
+function nextControlOf(sid){
+  const le=lastEval(sid),p=state.plans.find(x=>x.studentId===sid),w=state.workouts.find(x=>x.studentId===sid);
+  return [le?.proximoControl,p?.nextControl,w?.nextControl].filter(Boolean).sort()[0]||null;
 }
-$('student-search').addEventListener('input',renderStudents);
-$('student-rows').addEventListener('click',e=>{
-  const b=e.target.closest('[data-act]');if(!b)return;const id=b.dataset.id,s=state.students.find(x=>x.id===id);if(!s)return;
+function studentStatus(s){
+  const l=evalsOf(s.id),le=l[l.length-1],first=l[0];const ds=le?daysSince(le.fecha):null;const nc=nextControlOf(s.id);
+  const late=(nc&&nc<today())||(ds!==null&&ds>35);
+  return {le,first,ds,nc,late,hasEval:!!le,hasPlan:state.plans.some(p=>p.studentId===s.id),hasWork:state.workouts.some(w=>w.studentId===s.id),signed:!!s.consent,delta:le&&first&&l.length>1?num(le.peso)-num(first.peso):null};
+}
+const S_FILTERS=[['all','Todos'],['nofirma','Sin firma',1],['noeval','Sin evaluación',1],['noplan','Sin pauta',1],['nowork','Sin rutina',1],['late','Control atrasado',1],['salud','Con condición de salud']];
+function sMatch(s,st,f){return f==='all'||(f==='nofirma'&&!st.signed)||(f==='noeval'&&!st.hasEval)||(f==='noplan'&&!st.hasPlan)||(f==='nowork'&&!st.hasWork)||(f==='late'&&st.late)||(f==='salud'&&(has(s.condicion)||has(s.medicamentos)||has(s.limitaciones)));}
+function renderStudents(){
+  if(!$('student-grid'))return;
+  const q=normName($('student-search').value||'');
+  const all=state.students.map(s=>({s,st:studentStatus(s)}));
+  $('student-filters').innerHTML=S_FILTERS.map(([k,l,w])=>{const n=all.filter(x=>sMatch(x.s,x.st,k)).length;return `<button type="button" class="fchip ${sFilter===k?'on':''} ${w&&n?'warn':''}" data-f="${k}">${l} <b>${n}</b></button>`;}).join('');
+  let list=all.filter(x=>sMatch(x.s,x.st,sFilter)&&(!q||normName([x.s.nombre,x.s.rut,x.s.telefono,x.s.correo,x.s.objetivo].join(' ')).includes(q)));
+  const so=$('student-sort').value;
+  list.sort((a,b)=>so==='recent'?String(b.s.fechaRegistro||'').localeCompare(String(a.s.fechaRegistro||'')):so==='control'?String(b.st.le?.fecha||'').localeCompare(String(a.st.le?.fecha||'')):so==='due'?((b.st.ds??9999)-(a.st.ds??9999)):a.s.nombre.localeCompare(b.s.nombre));
+  $('student-count').textContent=state.students.length;
+  $('student-grid').innerHTML=list.length?list.map(({s,st})=>{const id=esc(s.id);const ph=String(s.telefono||'').replace(/\D/g,'');
+    return `<div class="scard ${st.late?'alert':''}" data-act="ficha" data-id="${id}">
+      <div class="s-top"><div class="avatar" style="--av:${avColor(s.id)}">${esc(initials(s.nombre))}</div><div class="s-name"><b>${esc(s.nombre)}</b><span>${esc(s.objetivo||'Sin objetivo')}${s.edad?' · '+esc(s.edad)+' años':''}</span></div>
+        <div class="s-menu"><button class="btn sm ghost icon" type="button" data-menu="${id}" title="Más opciones">⋯</button></div></div>
+      <div class="s-stats"><div><small>Peso</small><strong>${st.le?esc(st.le.peso)+' kg':'—'}</strong></div><div><small>Variación</small><strong>${st.delta===null?'—':`<span class="delta ${Math.abs(st.delta)<.05?'eq':st.delta>0?'up':'down'}" style="font-size:14px">${st.delta>0?'+':''}${fmt(st.delta,1)}</span>`}</strong></div><div><small>Últ. control</small><strong style="${st.late?'color:#ff9b9b':''}">${st.ds===null?'—':st.ds===0?'Hoy':'hace '+st.ds+'d'}</strong></div></div>
+      <div class="s-badges"><span class="sb ${st.signed?'ok':'no'}">✍️ ${st.signed?'Firmado':'Sin firma'}</span><span class="sb ${st.hasPlan?'ok':'mid'}">🥗 ${st.hasPlan?'Pauta':'Sin pauta'}</span><span class="sb ${st.hasWork?'ok':'mid'}">🏋️ ${st.hasWork?'Rutina':'Sin rutina'}</span>${st.nc?`<span class="sb ${st.nc<today()?'no':'mid'}">📅 ${fdate(st.nc)}</span>`:''}${healthFlags(s).replace(/class="flag"/g,'class="sb no"').replace(/^<div>|<\/div>$/g,'')}</div>
+      <div class="s-actions"><button class="btn sm primary" type="button" data-act="ficha" data-id="${id}">📂 Ficha</button><button class="btn sm green" type="button" data-act="eval" data-id="${id}">📋 Evaluar</button>${ph?`<a class="btn sm secondary icon" href="https://wa.me/${ph}" target="_blank" rel="noopener" title="WhatsApp" onclick="event.stopPropagation()">💬</a>`:''}</div>
+    </div>`;}).join(''):`<div class="empty card" style="grid-column:1/-1">${state.students.length?'Ningún alumno coincide con el filtro.':'Aún no hay alumnos. <br><br><button class="btn primary" type="button" onclick="newStudent()">➕ Registrar el primero</button>'}</div>`;
+}
+$('student-filters').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;sFilter=b.dataset.f;renderStudents();});
+$('student-sort').addEventListener('change',renderStudents);
+function openMenu(btn,id){
+  document.querySelectorAll('.dd').forEach(x=>x.remove());
+  const s=state.students.find(x=>x.id===id);if(!s)return;
+  const d=document.createElement('div');d.className='dd';
+  d.innerHTML=`<button type="button" data-act="edit" data-id="${esc(id)}">✏️ Editar datos</button><button type="button" data-act="plan" data-id="${esc(id)}">🥗 Pauta nutricional</button><button type="button" data-act="work" data-id="${esc(id)}">🏋️ Rutina semanal</button><button type="button" data-act="firma" data-id="${esc(id)}">✍️ Consentimiento</button><button type="button" data-act="pdf" data-id="${esc(id)}">⬇️ PDF ficha completa</button><button type="button" class="danger" data-act="del" data-id="${esc(id)}">🗑 Eliminar alumno</button>`;
+  btn.parentElement.appendChild(d);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.s-menu'))document.querySelectorAll('.dd').forEach(x=>x.remove());});
+function newStudent(){if(currentView!=='alumnos')go('alumnos');resetStudentForm();$('student-form-card').classList.remove('hide');setTimeout(()=>{$('student-form-card').scrollIntoView({behavior:'smooth',block:'start'});$('student-form').elements.nombre.focus();},150);}
+function closeStudentForm(){resetStudentForm();$('student-form-card').classList.add('hide');}
+$('student-grid').addEventListener('click',e=>{
+  const m=e.target.closest('[data-menu]');if(m){e.stopPropagation();openMenu(m,m.dataset.menu);return;}
+  const b=e.target.closest('[data-act]');if(!b)return;if(b.tagName==='BUTTON')e.stopPropagation();document.querySelectorAll('.dd').forEach(x=>x.remove());const id=b.dataset.id,s=state.students.find(x=>x.id===id);if(!s)return;
   if(b.dataset.act==='ficha')openFicha(id);
+  if(b.dataset.act==='firma'){editStudent(id);setTimeout(()=>$('consent-panel').scrollIntoView({behavior:'smooth'}),400);}
+  if(b.dataset.act==='pdf')downloadPDF(id,'completa',null,b);
   if(b.dataset.act==='eval'){cancelEvalEdit(true);$('eval-student').value=id;calculate();go('evaluacion');}
   if(b.dataset.act==='plan'){$('plan-student').value=id;loadPlan();go('plan');}
   if(b.dataset.act==='work'){$('workout-student').value=id;loadWorkout();go('entrenamiento');}
@@ -3247,7 +3356,7 @@ $('student-rows').addEventListener('click',e=>{
   if(false){const f=$('student-form');Object.keys(s).forEach(k=>{if(f.elements[k])f.elements[k].value=s[k]??'';});$('student-form-title').textContent='Editar alumno';$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');f.scrollIntoView({behavior:'smooth'});}
   if(b.dataset.act==='del')deleteStudent(id);
 });
-function editStudent(id){const s=state.students.find(x=>x.id===id);if(!s)return;closeModal();if(currentView!=='alumnos')go('alumnos');resetStudentForm();const f=$('student-form');Object.keys(s).forEach(k=>{if(f.elements[k])f.elements[k].value=s[k]??'';});$('student-form-title').textContent='Editar alumno · '+s.nombre;$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');renderConsentPanel();setTimeout(()=>f.scrollIntoView({behavior:'smooth',block:'start'}),120);}
+function editStudent(id){const s=state.students.find(x=>x.id===id);if(!s)return;closeModal();if(currentView!=='alumnos')go('alumnos');resetStudentForm();const f=$('student-form');Object.keys(s).forEach(k=>{if(f.elements[k])f.elements[k].value=s[k]??'';});$('student-form-title').textContent='Editar alumno · '+s.nombre;$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');$('student-form-card').classList.remove('hide');renderConsentPanel();setTimeout(()=>$('student-form-card').scrollIntoView({behavior:'smooth',block:'start'}),120);}
 function resetStudentForm(){const f=$('student-form');f.reset();f.elements.id.value='';setTimeout(renderConsentPanel);$('student-form-title').textContent='Registrar alumno';$('student-submit').textContent='Guardar alumno';$('student-delete').classList.add('hide');}
 let undoData=null;
 function deleteStudent(id){
@@ -3271,7 +3380,7 @@ $('student-form').addEventListener('submit',e=>{
   e.preventDefault();const d=Object.fromEntries(new FormData(e.target).entries());d.nombre=(d.nombre||'').trim();if(!d.nombre)return;
   if(d.id){const i=state.students.findIndex(x=>x.id===d.id);if(i>-1)state.students[i]={...state.students[i],...d};toast('Alumno actualizado');}
   else{d.id=uid();d.fechaRegistro=today();state.students.push(d);toast('Alumno guardado correctamente');}
-  persist();resetStudentForm();renderDupBanner();
+  persist();closeStudentForm();renderDupBanner();
 });
 
 /* ================= FICHA COMPLETA ================= */
@@ -3289,7 +3398,10 @@ function openFicha(id){
   let workHTML='<div class="empty">Sin rutina semanal.</div>';
   if(w){workHTML=`<div class="kv">${kvc('Objetivo',w.goal)}${kvc('Semana desde',fdate(w.start))}${kvc('Responsable',w.responsable)}${kvc('Sesiones',DAYS.map(([k,l])=>l+': '+(w.days?.[k]?.type||'—')).join('\n'),1)}</div>`;}
   openModal(`
-    <div class="modal-head"><div><div class="eyebrow">Ficha completa del alumno</div><h3>${esc(s.nombre)}</h3>${healthFlags(s)}</div><button class="btn sm ghost" type="button" onclick="closeModal()">✕ Cerrar</button></div>
+    <div class="modal-head"><div class="ficha-head" style="margin:0"><div class="avatar lg" style="--av:${avColor(s.id)}">${esc(initials(s.nombre))}</div><div><div class="eyebrow">Ficha completa del alumno</div><h3>${esc(s.nombre)}</h3><div class="small-note">${esc(s.objetivo||'')}${s.edad?' · '+esc(s.edad)+' años':''}${s.rut?' · RUT '+esc(s.rut):''}</div>${healthFlags(s)}</div></div><button class="btn sm ghost" type="button" onclick="closeModal()">✕</button></div>
+    ${(()=>{const st=studentStatus(s);const bm=st.le&&num(st.le.altura)?num(st.le.peso)/((num(st.le.altura)/100)**2):NaN;const ph=String(s.telefono||'').replace(/\D/g,'');
+      return `<div class="ficha-kpis"><div><small>Peso actual</small><strong>${st.le?esc(st.le.peso)+' kg':'—'}</strong></div><div><small>Variación total</small><strong>${st.delta===null?'—':(st.delta>0?'+':'')+fmt(st.delta,1)+' kg'}</strong></div><div><small>IMC</small><strong>${Number.isFinite(bm)?fmt(bm,1):'—'}</strong></div><div><small>Último control</small><strong>${st.ds===null?'—':st.ds===0?'Hoy':'hace '+st.ds+' d'}</strong></div></div>
+      <div class="actions" style="margin-bottom:12px">${ph?`<a class="btn sm green" href="https://wa.me/${ph}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}${s.correo?`<a class="btn sm secondary" href="mailto:${esc(s.correo)}">📧 Correo</a>`:''}<button class="btn sm secondary" type="button" onclick="downloadPDF('${esc(id)}','completa',null,this)">⬇️ PDF completo</button></div>`;})()}
     <div class="fsec"><div class="fsec-head"><h4>👤 Datos personales y salud</h4><button class="btn sm primary" type="button" onclick="editStudent('${esc(id)}')">✏️ Editar ficha</button></div>
       <div class="kv">${kvc('Edad',s.edad?s.edad+' años':'')}${kvc('Sexo',s.sexo)}${kvc('Objetivo',s.objetivo)}${kvc('Teléfono',s.telefono)}${kvc('Correo',s.correo)}${kvc('Frecuencia',s.frecuencia)}${kvc('Enfermedad / condición médica',s.condicion,1)}${kvc('Medicamentos actuales',s.medicamentos,1)}${kvc('Limitaciones físicas',s.limitaciones,1)}${kvc('Observaciones',s.obs,1)}</div></div>
     <div class="fsec"><div class="fsec-head"><h4>📋 Evaluaciones (${ev.length})</h4><button class="btn sm green" type="button" onclick="closeModal();cancelEvalEdit(true);$('eval-student').value='${esc(id)}';calculate();go('evaluacion')">+ Nueva evaluación</button></div>
@@ -4464,7 +4576,7 @@ async function cloudBoot(){
 
 /* ================= INIT ================= */
 $('eval-date').value=today();
-render();go('dashboard');setTimeout(()=>{if(!STORAGE_OK)toast('⚠ No se pudieron leer los datos guardados. No se sobrescribió nada: usa 🛟 Recuperar.');else if(window._recoveredFromAuto){saveLocal();toast('🛟 Datos recuperados desde la copia automática');}else if(state.students.length){const lb=state.config.lastBackup;if(!lb||Date.now()-Date.parse(lb)>7*864e5)toast('💾 Hace más de 7 días que no descargas un respaldo. Hazlo desde 💾 Respaldo.');}},900);loadGymForm();renderConsentPanel();handleHash();loadRepoSig();if(!location.hash.startsWith('#firmar='))setTimeout(pollSignatures,1500);cloudBoot();
+render();go('dashboard');setTimeout(()=>{if(!STORAGE_OK)toast('⚠ No se pudieron leer los datos guardados. No se sobrescribió nada: usa 🛟 Recuperar.');else if(window._recoveredFromAuto){saveLocal();toast('🛟 Datos recuperados desde la copia automática');}else if(state.students.length){const lb=state.config.lastBackup;if(CLOUD.session)return;if(!lb||Date.now()-Date.parse(lb)>7*864e5)toast('💾 Hace más de 7 días que no descargas un respaldo. Hazlo desde 💾 Respaldo.');}},900);loadGymForm();renderConsentPanel();handleHash();loadRepoSig();if(!location.hash.startsWith('#firmar='))setTimeout(pollSignatures,1500);cloudBoot();
 loadTemplate(false);setMacroInputs(DEFAULT_MACRO);updateCalc();
 </script>
 </body>
