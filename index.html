@@ -612,6 +612,10 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
 .sg-empty{padding:12px;color:var(--muted)}.sg-foot{padding:7px 10px 3px;color:#7a7a74;font-size:12px;border-top:1px solid #2b2b2b;margin-top:4px}
 .tutor-box{border:1px solid rgba(217,169,49,.35);background:rgba(217,169,49,.06);border-radius:12px;padding:14px}
 .tutor-head{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}.tutor-head b{color:var(--gold2);font-family:'Saira Condensed',sans-serif;font-size:16px}.tutor-head span{color:var(--muted);font-size:13px}
+.eval-block{margin-top:18px;padding-top:18px;border-top:1px solid #2b2b2b}
+.eval-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px}
+.eval-sub{background:#181818;border:1px solid #2b2b2b;border-radius:12px;padding:16px;min-width:0}
+@media(max-width:900px){.eval-grid{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -655,14 +659,14 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
       <div class="hello"><img class="hello-logo" src="" data-logo alt=""><div style="flex:1;min-width:0"><h3 id="hello-title">Hola</h3><p id="hello-sub">Resumen de tu gimnasio hoy.</p></div><span class="cloud-badge" data-cloud>☁️</span></div>
       <div class="qa">
         <button type="button" onclick="newStudent()"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Nuevo alumno</button>
-        <button type="button" onclick="go('evaluacion')"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4"/></svg></span>Evaluar</button>
+        <button type="button" onclick="openEval()"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4"/></svg></span>Evaluar</button>
         <button type="button" onclick="go('plan')"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.5c-1-2-3-3-5-2.5-3 .8-3.5 4.5-2.5 8 1.1 4 3.5 7 5.5 7 1 0 1.3-.5 2-.5s1 .5 2 .5c2 0 4.4-3 5.5-7 1-3.5.5-7.2-2.5-8-2-.5-4 .5-5 2.5zM12 7.5c0-2 1-3.5 3-4.5"/></svg></span>Pauta / macros</button>
         <button type="button" onclick="go('entrenamiento')"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6v12M17.5 6v12M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></span>Rutina</button>
         <button type="button" onclick="go('firmas')"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20c3-1 4.5-3 6-3s1.5 2 3 2 2.5-2 4-2M14 4l4 4-8.5 8.5H5.5v-4z"/></svg></span>Firmas</button>
       </div>
       <div class="metrics">
         <div class="metric click" onclick="go('alumnos')"><div class="metric-top"><div><span>Alumnos</span><strong id="stat-students">0</strong></div><div class="dot ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></svg></div></div><span>Fichas registradas.</span></div>
-        <div class="metric click" onclick="go('evaluacion')"><div class="metric-top"><div><span>Evaluaciones</span><strong id="stat-evals">0</strong></div><div class="dot ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4"/></svg></div></div><span>Controles guardados.</span></div>
+        <div class="metric click" onclick="go('alumnos')"><div class="metric-top"><div><span>Evaluaciones</span><strong id="stat-evals">0</strong></div><div class="dot ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4"/></svg></div></div><span>Controles guardados.</span></div>
         <div class="metric click" onclick="go('plan')"><div class="metric-top"><div><span>Pautas</span><strong id="stat-plans">0</strong></div><div class="dot ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.5c-1-2-3-3-5-2.5-3 .8-3.5 4.5-2.5 8 1.1 4 3.5 7 5.5 7 1 0 1.3-.5 2-.5s1 .5 2 .5c2 0 4.4-3 5.5-7 1-3.5.5-7.2-2.5-8-2-.5-4 .5-5 2.5zM12 7.5c0-2 1-3.5 3-4.5"/></svg></div></div><span>Planes con macros.</span></div>
         <div class="metric click" onclick="go('entrenamiento')"><div class="metric-top"><div><span>Rutinas</span><strong id="stat-workouts">0</strong></div><div class="dot ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6v12M17.5 6v12M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></div></div><span>Planes semanales.</span></div>
       </div>
@@ -670,7 +674,7 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
       <div class="grid">
         <div class="stack">
           <div class="card"><div class="rowhead"><div><h3>Pendientes</h3><p class="desc" style="margin:0">Toca para ver a quiénes les falta.</p></div></div><div class="todo" id="todo-list"></div></div>
-          <div class="card"><div class="rowhead"><div><h3>Últimas evaluaciones</h3><p class="desc" style="margin:0">Actividad reciente y variación de peso.</p></div><button class="btn ghost sm" onclick="go('evaluacion')">+ Evaluar</button></div><div id="recent-evals"></div></div>
+          <div class="card"><div class="rowhead"><div><h3>Últimas evaluaciones</h3><p class="desc" style="margin:0">Actividad reciente y variación de peso.</p></div><button class="btn ghost sm" onclick="openEval()">+ Evaluar</button></div><div id="recent-evals"></div></div>
         </div>
         <div class="stack">
           <div class="card"><div class="rowhead"><div><h3>Agenda de controles</h3><p class="desc" style="margin:0">Próximos controles y atrasados.</p></div></div><div id="agenda"></div></div>
@@ -696,7 +700,7 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
       <div class="card student-form-card hide" id="student-form-card">
         <button class="btn sm ghost sf-close" type="button" onclick="closeStudentForm()">Cerrar</button>
 
-          <div class="rowhead"><div><h3 id="student-form-title">Registrar alumno</h3><p class="desc" style="margin:0">Ficha base para controles, pautas y rutinas.</p></div><div class="tag" id="student-count">0 alumno(s)</div></div>
+          <div class="rowhead"><div><h3 id="student-form-title">Registrar alumno</h3><p class="desc" style="margin:0">Datos, evaluación y consentimiento en una sola ficha.</p></div><div class="tag" id="student-count">0 alumno(s)</div></div>
           <form id="student-form">
             <input type="hidden" name="id">
             <div class="fieldgrid two">
@@ -724,6 +728,46 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
               <div class="field full"><label>¿Tiene limitaciones físicas o lesiones?</label><textarea name="limitaciones" placeholder="Ej. Dolor lumbar, lesión de rodilla, hombro operado… o “Ninguna”"></textarea></div>
               <div class="field full"><label>Observaciones iniciales</label><textarea name="obs" placeholder="Alergias, horarios, antecedentes relevantes..."></textarea></div>
             </div>
+          </form>
+          <div class="eval-block" id="eval-block">
+      <div class="grid eval-grid">
+        <div class="eval-sub">
+          <div class="rowhead"><div><h4 style="margin:0">Evaluación física y de hábitos</h4><p class="desc" style="margin:2px 0 0" id="eval-hint">Completa peso y estatura para registrar la medición de hoy. Déjalo vacío si solo actualizas datos.</p></div><button class="btn secondary sm" type="button" onclick="exportCSV('evaluaciones')">Exportar CSV</button></div>
+          <div id="eval-editing" class="editing-banner hide"><span>✏️ Editando evaluación del <span id="eval-editing-date"></span></span><button class="btn sm ghost" type="button" onclick="cancelEvalEdit()">Cancelar edición</button></div>
+          <form id="eval-form"><input type="hidden" name="id" id="eval-id">
+            <div class="fieldgrid two">
+              <div class="field hide"><label>Alumno</label><select id="eval-student"></select></div>
+              <div class="field"><label>Fecha</label><input id="eval-date" name="fecha" type="date" required></div>
+              <div class="field"><label>Meta del control</label><select name="meta"><option>Control inicial</option><option>Seguimiento</option><option>Ajuste de plan</option><option>Chequeo mensual</option></select></div>
+              <div class="field"><label>Peso (kg)</label><div class="input-unit"><input id="peso" name="peso" type="number" inputmode="decimal" step="0.1" min="20" placeholder="72.5" required><em>kg</em></div></div>
+              <div class="field"><label>Estatura (cm)</label><div class="input-unit"><input id="altura" name="altura" type="number" inputmode="numeric" min="100" max="240" placeholder="175" required><em>cm</em></div></div>
+              <div class="field"><label>Cintura (cm) · opcional</label><div class="input-unit"><input id="cintura" name="cintura" type="number" inputmode="decimal" step="0.1" placeholder="82"><em>cm</em></div></div>
+              <div class="field"><label>Agua consumida al día (L)</label><div class="input-unit"><input name="aguaReal" id="agua-real" type="number" inputmode="decimal" step="0.1" min="0" placeholder="2.5"><em>L</em></div></div>
+              <div class="field"><label>¿Usa creatina?</label><select name="creatina"><option>No</option><option>Sí, diaria</option><option>Sí, ocasional</option></select></div>
+              <div class="field"><label>Sueño promedio</label><select name="sueno"><option>Menos de 6 h</option><option>6 a 7 h</option><option>7 a 8 h</option><option>Más de 8 h</option></select></div>
+              <div class="field"><label>Número de comidas</label><select name="comidas"><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6+</option></select></div>
+              <div class="field"><label>Próximo control</label><input name="proximoControl" type="date"></div>
+              <div class="field"><label>Responsable</label><input name="responsable" placeholder="Nombre del entrenador/a"></div>
+              <div class="field full"><label>Observaciones</label><textarea name="notas" placeholder="Apetito, adherencia, antojos, energía, recuperación, preferencias alimentarias..."></textarea></div>
+            </div>
+            <div class="sep"></div>
+            <div class="results">
+              <div class="res"><small>Agua de referencia</small><strong id="water-range">—</strong><small>L/día (30–35 ml/kg)</small></div>
+              <div class="res"><small>IMC orientativo</small><strong id="bmi">—</strong><small id="bmi-cat">Solo adultos · referencia</small></div>
+              <div class="res"><small>Cintura / estatura</small><strong id="whtr">—</strong><small id="whtr-cat">Referencia &lt; 0,5</small></div>
+            </div>
+            <div class="sep"></div>
+            <div class="actions"><button class="hide" type="submit" id="eval-submit">Guardar evaluación</button><button class="btn secondary" type="button" onclick="evalToPlan()">Usar peso en calculadora</button></div>
+          </form>
+        </div>
+        <div class="eval-sub">
+          <h4 style="margin:0 0 4px">Progreso</h4>
+          <p class="desc" id="progress-desc">Selecciona un alumno para ver su evolución de peso.</p>
+          <div id="progress-chart"></div>
+          <div id="progress-list"></div>
+        </div>
+      </div>
+          </div>
             <div class="consent-panel" id="consent-panel">
               <div class="rowhead" style="margin-bottom:8px"><div><h4 style="margin:0">Consentimiento informado</h4><p class="desc" style="margin:2px 0 0">Se completa con los datos de la ficha. El alumno lo firma aquí o desde su celular (correo o QR).</p></div><span id="consent-status"></span></div>
               <div class="consent-text" id="consent-preview"></div>
@@ -735,8 +779,7 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
               </div>
             </div>
             <div class="sep"></div>
-            <div class="actions"><button class="btn primary" type="submit" id="student-submit">Guardar alumno</button><button class="btn secondary" type="button" onclick="resetStudentForm()">Limpiar</button><button class="btn danger hide" type="button" id="student-delete" onclick="deleteStudent($('student-form').elements.id.value)">Eliminar alumno</button></div>
-          </form>
+            <div class="actions"><button class="btn primary" type="submit" form="student-form" id="student-submit">Guardar ficha</button><button class="btn secondary" type="button" onclick="resetStudentForm()">Limpiar</button><button class="btn danger hide" type="button" id="student-delete" onclick="deleteStudent($('student-form').elements.id.value)">Eliminar alumno</button></div>
       </div>
       <div class="sgrid" id="student-grid"></div>
           <details class="card" id="gym-config" style="margin-top:18px">
@@ -761,48 +804,6 @@ body{background:#121212;color:var(--text);letter-spacing:.005em}
         <div class="notice">El texto predeterminado es una base general. Es recomendable que lo revise un abogado antes de usarlo.</div>
       </details>
 </section>
-
-    <!-- ================= EVALUACIÓN ================= -->
-    <section id="view-evaluacion" class="view hide">
-      <div class="photo-banner evaluacion no-print"><div class="photo-copy"><div class="eyebrow">Evolution Power · Laguna Verde</div><h3>MIDE EL PROGRESO</h3><p>Datos claros, seguimiento preciso y una evaluación que acompaña cada entrenamiento.</p></div></div>
-      <div class="grid">
-        <div class="card">
-          <div class="rowhead"><div><h3>Evaluación nutricional y de hábitos</h3><p class="desc" style="margin:0">Registra la medición actual.</p></div><button class="btn secondary sm" type="button" onclick="exportCSV('evaluaciones')">Exportar CSV</button></div>
-          <div id="eval-editing" class="editing-banner hide"><span>✏️ Editando evaluación del <span id="eval-editing-date"></span></span><button class="btn sm ghost" type="button" onclick="cancelEvalEdit()">Cancelar edición</button></div>
-          <form id="eval-form"><input type="hidden" name="id" id="eval-id">
-            <div class="fieldgrid two">
-              <div class="field"><label>Alumno</label><select id="eval-student" required></select></div>
-              <div class="field"><label>Fecha</label><input id="eval-date" name="fecha" type="date" required></div>
-              <div class="field"><label>Meta del control</label><select name="meta"><option>Control inicial</option><option>Seguimiento</option><option>Ajuste de plan</option><option>Chequeo mensual</option></select></div>
-              <div class="field"><label>Peso (kg)</label><div class="input-unit"><input id="peso" name="peso" type="number" inputmode="decimal" step="0.1" min="20" placeholder="72.5" required><em>kg</em></div></div>
-              <div class="field"><label>Estatura (cm)</label><div class="input-unit"><input id="altura" name="altura" type="number" inputmode="numeric" min="100" max="240" placeholder="175" required><em>cm</em></div></div>
-              <div class="field"><label>Cintura (cm) · opcional</label><div class="input-unit"><input id="cintura" name="cintura" type="number" inputmode="decimal" step="0.1" placeholder="82"><em>cm</em></div></div>
-              <div class="field"><label>Agua consumida al día (L)</label><div class="input-unit"><input name="aguaReal" id="agua-real" type="number" inputmode="decimal" step="0.1" min="0" placeholder="2.5"><em>L</em></div></div>
-              <div class="field"><label>¿Usa creatina?</label><select name="creatina"><option>No</option><option>Sí, diaria</option><option>Sí, ocasional</option></select></div>
-              <div class="field"><label>Sueño promedio</label><select name="sueno"><option>Menos de 6 h</option><option>6 a 7 h</option><option>7 a 8 h</option><option>Más de 8 h</option></select></div>
-              <div class="field"><label>Número de comidas</label><select name="comidas"><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6+</option></select></div>
-              <div class="field"><label>Próximo control</label><input name="proximoControl" type="date"></div>
-              <div class="field"><label>Responsable</label><input name="responsable" placeholder="Nombre del entrenador/a"></div>
-              <div class="field full"><label>Observaciones</label><textarea name="notas" placeholder="Apetito, adherencia, antojos, energía, recuperación, preferencias alimentarias..."></textarea></div>
-            </div>
-            <div class="sep"></div>
-            <div class="results">
-              <div class="res"><small>Agua de referencia</small><strong id="water-range">—</strong><small>L/día (30–35 ml/kg)</small></div>
-              <div class="res"><small>IMC orientativo</small><strong id="bmi">—</strong><small id="bmi-cat">Solo adultos · referencia</small></div>
-              <div class="res"><small>Cintura / estatura</small><strong id="whtr">—</strong><small id="whtr-cat">Referencia &lt; 0,5</small></div>
-            </div>
-            <div class="sep"></div>
-            <div class="actions"><button class="btn green" type="submit" id="eval-submit">Guardar evaluación</button><button class="btn secondary" type="button" onclick="evalToPlan()">Usar peso en calculadora</button></div>
-          </form>
-        </div>
-        <div class="card">
-          <h3>Progreso del alumno</h3>
-          <p class="desc" id="progress-desc">Selecciona un alumno para ver su evolución de peso.</p>
-          <div id="progress-chart"></div>
-          <div id="progress-list"></div>
-        </div>
-      </div>
-    </section>
 
     <!-- ================= PLAN ALIMENTARIO ================= -->
     <section id="view-plan" class="view hide">
@@ -3371,7 +3372,7 @@ function calcMacros(m){
 }
 
 /* ================= NAV ================= */
-const VIEWS=[['dashboard','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>','Inicio'],['alumnos','<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></svg>','Alumnos'],['evaluacion','<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4"/></svg>','Evaluación'],['plan','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.5c-1-2-3-3-5-2.5-3 .8-3.5 4.5-2.5 8 1.1 4 3.5 7 5.5 7 1 0 1.3-.5 2-.5s1 .5 2 .5c2 0 4.4-3 5.5-7 1-3.5.5-7.2-2.5-8-2-.5-4 .5-5 2.5zM12 7.5c0-2 1-3.5 3-4.5"/></svg>','Plan Alimentario','Nutrición'],['entrenamiento','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6v12M17.5 6v12M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>','Entrenamiento semanal','Rutina'],['firmas','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20c3-1 4.5-3 6-3s1.5 2 3 2 2.5-2 4-2M14 4l4 4-8.5 8.5H5.5v-4z"/></svg>','Consentimiento informado','Firmas'],['notifs','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>','Notificaciones'],['informe','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l5 5v13H6zM14 3v5h5M9 13h6M9 17h6"/></svg>','Informes PDF','PDF']];
+const VIEWS=[['dashboard','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>','Inicio'],['alumnos','<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></svg>','Alumnos'],['plan','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.5c-1-2-3-3-5-2.5-3 .8-3.5 4.5-2.5 8 1.1 4 3.5 7 5.5 7 1 0 1.3-.5 2-.5s1 .5 2 .5c2 0 4.4-3 5.5-7 1-3.5.5-7.2-2.5-8-2-.5-4 .5-5 2.5zM12 7.5c0-2 1-3.5 3-4.5"/></svg>','Plan Alimentario','Nutrición'],['entrenamiento','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6v12M17.5 6v12M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>','Entrenamiento semanal','Rutina'],['firmas','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20c3-1 4.5-3 6-3s1.5 2 3 2 2.5-2 4-2M14 4l4 4-8.5 8.5H5.5v-4z"/></svg>','Consentimiento informado','Firmas'],['notifs','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>','Notificaciones'],['informe','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l5 5v13H6zM14 3v5h5M9 13h6M9 17h6"/></svg>','Informes PDF','PDF']];
 $('nav').innerHTML=VIEWS.map(([v,i,l])=>`<button data-view="${v}"><span class="ic">${i}</span>${l}</button>`).join('');
 $('bnav').innerHTML=VIEWS.filter(v=>v[0]!=='notifs').map(([v,i,l,s])=>`<button data-view="${v}"><span class="ic">${i}</span>${s||l}</button>`).join('');
 const titles={
@@ -3385,10 +3386,11 @@ const titles={
   informe:['Informe profesional en PDF','Documento limpio y listo para compartir.']
 };
 let currentView='dashboard';
-const MSAVE={plan:['💾 Guardar pauta',()=>savePlan()],evaluacion:['💾 Guardar evaluación',()=>$('eval-form').requestSubmit()],entrenamiento:['💾 Guardar rutina',()=>saveWorkout()],alumnos:['💾 Guardar alumno',()=>$('student-form').requestSubmit(),()=>!$('student-form-card').classList.contains('hide')]};
+const MSAVE={plan:['💾 Guardar pauta',()=>savePlan()],evaluacion:['💾 Guardar evaluación',()=>$('eval-form').requestSubmit()],entrenamiento:['💾 Guardar rutina',()=>saveWorkout()],alumnos:['💾 Guardar ficha',()=>$('student-form').requestSubmit(),()=>!$('student-form-card').classList.contains('hide')]};
 function updateMSave(view){view=view||currentView;const m=MSAVE[view];const show=!!m&&(!m[2]||m[2]());$('m-save').classList.toggle('hide',!show);document.body.classList.toggle('has-msave',show);if(show){$('m-save-btn').textContent=(view==='alumnos'&&$('student-form').elements.id.value)?'💾 Guardar cambios':m[0];}}
 $('m-save-btn').addEventListener('click',()=>{const m=MSAVE[currentView];if(m)m[1]();});
 function go(view){
+  if(view==='evaluacion'){openEval();return;}
   currentView=view;
   VIEWS.forEach(([v])=>$('view-'+v).classList.toggle('hide',v!==view));
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
@@ -3508,6 +3510,13 @@ function openMenu(btn,id){
   btn.parentElement.appendChild(d);
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.s-menu'))document.querySelectorAll('.dd').forEach(x=>x.remove());});
+function resetEvalPart(sid){const ef=$('eval-form');ef.reset();$('eval-id').value='';$('eval-editing').classList.add('hide');$('eval-student').value=sid||'';$('eval-date').value=today();
+  if(ef.elements.meta)ef.elements.meta.value=sid&&evalsOf(sid).length?'Seguimiento':'Control inicial';
+  const le=sid&&lastEval(sid);if(le?.altura)$('altura').value=le.altura;calculate();renderProgress();}
+function openEval(sid){
+  if(!sid){go('alumnos');setTimeout(()=>{$('student-search').focus();toast('Elige el alumno a evaluar o crea uno nuevo');},200);return;}
+  editStudent(sid);setTimeout(()=>{$('eval-block').scrollIntoView({behavior:'smooth',block:'start'});$('peso').focus({preventScroll:true});},350);
+}
 function newStudent(){if(currentView!=='alumnos')go('alumnos');resetStudentForm();$('student-form-card').classList.remove('hide');updateMSave();setTimeout(()=>{$('student-form-card').scrollIntoView({behavior:'smooth',block:'start'});$('student-form').elements.nombre.focus();},150);}
 function closeStudentForm(){resetStudentForm();$('student-form-card').classList.add('hide');updateMSave();}
 $('student-grid').addEventListener('click',e=>{
@@ -3516,15 +3525,15 @@ $('student-grid').addEventListener('click',e=>{
   if(b.dataset.act==='ficha')openFicha(id);
   if(b.dataset.act==='firma'){editStudent(id);setTimeout(()=>$('consent-panel').scrollIntoView({behavior:'smooth'}),400);}
   if(b.dataset.act==='pdf')downloadPDF(id,'completa',null,b);
-  if(b.dataset.act==='eval'){cancelEvalEdit(true);$('eval-student').value=id;calculate();go('evaluacion');}
+  if(b.dataset.act==='eval')openEval(id);
   if(b.dataset.act==='plan'){$('plan-student').value=id;loadPlan();go('plan');}
   if(b.dataset.act==='work'){$('workout-student').value=id;loadWorkout();go('entrenamiento');}
   if(b.dataset.act==='edit')editStudent(id);
-  if(false){const f=$('student-form');Object.keys(s).forEach(k=>{if(f.elements[k])f.elements[k].value=s[k]??'';});$('student-form-title').textContent='Editar alumno';$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');f.scrollIntoView({behavior:'smooth'});}
+  if(false){const f=$('student-form');Object.keys(s).forEach(k=>{if(f.elements[k])f.elements[k].value=s[k]??'';});resetEvalPart(id);$('student-form-title').textContent='Editar alumno';$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');f.scrollIntoView({behavior:'smooth'});}
   if(b.dataset.act==='del')deleteStudent(id);
 });
-function editStudent(id){const s=state.students.find(x=>x.id===id);if(!s)return;closeModal();if(currentView!=='alumnos')go('alumnos');resetStudentForm();const f=$('student-form');Object.keys(s).forEach(k=>{if(f.elements[k])f.elements[k].value=s[k]??'';});$('student-form-title').textContent='Editar alumno · '+s.nombre;$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');$('student-form-card').classList.remove('hide');updateMSave();renderConsentPanel();setTimeout(()=>$('student-form-card').scrollIntoView({behavior:'smooth',block:'start'}),120);}
-function resetStudentForm(){const f=$('student-form');f.reset();f.elements.id.value='';setTimeout(renderConsentPanel);$('student-form-title').textContent='Registrar alumno';$('student-submit').textContent='Guardar alumno';$('student-delete').classList.add('hide');}
+function editStudent(id){const s=state.students.find(x=>x.id===id);if(!s)return;closeModal();if(currentView!=='alumnos')go('alumnos');resetStudentForm();const f=$('student-form');Object.keys(s).forEach(k=>{if(f.elements[k])f.elements[k].value=s[k]??'';});resetEvalPart(id);$('student-form-title').textContent='Editar alumno · '+s.nombre;$('student-submit').textContent='Guardar cambios';$('student-delete').classList.remove('hide');$('student-form-card').classList.remove('hide');updateMSave();renderConsentPanel();setTimeout(()=>$('student-form-card').scrollIntoView({behavior:'smooth',block:'start'}),120);}
+function resetStudentForm(){const f=$('student-form');f.reset();f.elements.id.value='';resetEvalPart('');setTimeout(renderConsentPanel);$('student-form-title').textContent='Registrar alumno';$('student-submit').textContent='Guardar ficha';$('student-delete').classList.add('hide');}
 let undoData=null;
 function deleteStudent(id){
   const s=state.students.find(x=>x.id===id);if(!s)return;
@@ -3575,10 +3584,18 @@ function undoDelete(){
   persist();toast('Alumno restaurado');
 }
 $('student-form').addEventListener('submit',e=>{
-  e.preventDefault();const d=Object.fromEntries(new FormData(e.target).entries());d.nombre=(d.nombre||'').trim();if(!d.nombre)return;
-  if(d.id){const i=state.students.findIndex(x=>x.id===d.id);if(i>-1)state.students[i]={...state.students[i],...d};toast('Alumno actualizado');}
-  else{d.id=uid();d.fechaRegistro=today();state.students.push(d);toast('Alumno guardado correctamente');}
-  persist();closeStudentForm();renderDupBanner();
+  e.preventDefault();const d=Object.fromEntries(new FormData(e.target).entries());d.nombre=(d.nombre||'').trim();if(!d.nombre){toast('Escribe el nombre del alumno');e.target.elements.nombre.focus();return;}
+  const withEval=evalHasData();
+  if(withEval){const pf=$('eval-form');if(!(num(pf.elements.peso.value)>0&&num(pf.elements.altura.value)>0)){toast('Evaluación: completa peso y estatura (o déjalos vacíos)');$('eval-block').scrollIntoView({behavior:'smooth',block:'start'});return;}}
+  const isNew=!d.id;
+  if(d.id){const i=state.students.findIndex(x=>x.id===d.id);if(i>-1)state.students[i]={...state.students[i],...d};}
+  else{d.id=uid();d.fechaRegistro=today();state.students.push(d);}
+  let ev='none';if(withEval)ev=saveEvalFor(d.id);
+  persist();
+  const msg=(isNew?'Alumno guardado':'Ficha actualizada')+(ev==='saved'?' con su evaluación':ev==='updated'?' y evaluación corregida':'');
+  closeStudentForm();renderDupBanner();
+  if(ev==='saved'){$('report-student').value=d.id;$('report-mode').value='evaluacion';drawReport();renderReport();toast('✅ '+msg,{label:'Ver PDF',fn:()=>go('informe')});}
+  else toast('✅ '+msg);
 });
 
 /* ================= FICHA COMPLETA ================= */
@@ -3602,7 +3619,7 @@ function openFicha(id){
       <div class="actions" style="margin-bottom:12px">${ph?`<a class="btn sm green" href="https://wa.me/${ph}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}${s.correo?`<a class="btn sm secondary" href="mailto:${esc(s.correo)}">📧 Correo</a>`:''}<button class="btn sm secondary" type="button" onclick="downloadPDF('${esc(id)}','completa',null,this)">PDF completo</button></div>`;})()}
     <div class="fsec"><div class="fsec-head"><h4>Datos personales y salud</h4><button class="btn sm primary" type="button" onclick="editStudent('${esc(id)}')">Editar ficha</button></div>
       <div class="kv">${kvc('Edad',s.edad?s.edad+' años':'')}${kvc('Sexo',s.sexo)}${kvc('Objetivo',s.objetivo)}${kvc('Teléfono',s.telefono)}${kvc('Correo',s.correo)}${kvc('Frecuencia',s.frecuencia)}${kvc('Enfermedad / condición médica',s.condicion,1)}${kvc('Medicamentos actuales',s.medicamentos,1)}${kvc('Limitaciones físicas',s.limitaciones,1)}${kvc('Observaciones',s.obs,1)}</div></div>
-    <div class="fsec"><div class="fsec-head"><h4>Evaluaciones (${ev.length})</h4><button class="btn sm green" type="button" onclick="closeModal();cancelEvalEdit(true);$('eval-student').value='${esc(id)}';calculate();go('evaluacion')">+ Nueva evaluación</button></div>
+    <div class="fsec"><div class="fsec-head"><h4>Evaluaciones (${ev.length})</h4><button class="btn sm green" type="button" onclick="closeModal();openEval('${esc(id)}')">+ Nueva evaluación</button></div>
       ${ev.length?ev.map((e,i)=>{const prev=ev[i+1];return `<div class="hist-row"><span><b>${fdate(e.fecha)}</b> · <span style="color:#a3a39e">${esc(e.meta)}</span>${i===ev.length-1?' <span class="tag gold">Inicial</span>':''}<br><span style="color:#a3a39e;font-size:12px">${esc(e.peso)} kg · ${esc(e.altura)} cm${e.cintura?' · cintura '+esc(e.cintura)+' cm':''}</span></span><span style="white-space:nowrap">${deltaHTML(prev?num(e.peso)-num(prev.peso):null)} <button class="btn sm ghost icon" type="button" onclick="editEval('${esc(e.id)}')" title="Editar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6L9 21H3v-6zM12 6l6 6"/></svg></button><button class="btn sm danger icon" type="button" onclick="delEval('${esc(e.id)}')" title="Eliminar"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg></button></span></div>`;}).join(''):'<div class="empty">Sin evaluaciones.</div>'}</div>
     <div class="fsec"><div class="fsec-head"><h4>Ficha nutricional</h4><div class="actions"><button class="btn sm primary" type="button" onclick="closeModal();$('plan-student').value='${esc(id)}';loadPlan();go('plan')">${p?'✏️ Editar pauta':'+ Crear pauta'}</button>${p?`<button class="btn sm danger" type="button" onclick="delPlanOf('${esc(id)}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg></button>`:''}</div></div>${planHTML}</div>
     <div class="fsec"><div class="fsec-head"><h4>Ficha de entrenamiento</h4><div class="actions"><button class="btn sm primary" type="button" onclick="closeModal();$('workout-student').value='${esc(id)}';loadWorkout();go('entrenamiento')">${w?'✏️ Editar rutina':'+ Crear rutina'}</button>${w?`<button class="btn sm danger" type="button" onclick="delWorkoutOf('${esc(id)}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg></button>`:''}</div></div>${workHTML}</div>
@@ -4218,7 +4235,7 @@ $('eval-student').addEventListener('change',()=>{if(!$('eval-id').value){const f
 
 function renderProgress(){
   const sid=$('eval-student').value;const l=evalsOf(sid);
-  if(!sid){$('progress-desc').textContent='Selecciona un alumno para ver su evolución de peso.';$('progress-chart').innerHTML='';$('progress-list').innerHTML='';return;}
+  if(!sid){$('progress-desc').textContent='El historial aparece al guardar el alumno con su primera evaluación.';$('progress-chart').innerHTML='';$('progress-list').innerHTML='';return;}
   if(!l.length){$('progress-desc').textContent='Este alumno aún no tiene evaluaciones.';$('progress-chart').innerHTML='<div class="empty">Guarda la primera evaluación para iniciar el seguimiento.</div>';$('progress-list').innerHTML='';return;}
   const first=num(l[0].peso),last=num(l[l.length-1].peso),d=last-first;
   $('progress-desc').innerHTML=`${l.length} control(es) · variación total ${deltaHTML(l.length>1?d:null)}`;
@@ -4247,34 +4264,32 @@ function sparkSVG(vals,labels){
   ${vals.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="4.5" fill="#111" stroke="#ffc629" stroke-width="2.5" vector-effect="non-scaling-stroke"><title>${labels[i]}: ${v} kg</title></circle>`).join('')}</svg>`;
 }
 function editEval(id){
-  const e=state.evals.find(x=>x.id===id);if(!e)return;closeModal();
+  const e=state.evals.find(x=>x.id===id);if(!e)return;closeModal();editStudent(e.studentId);
   const f=$('eval-form');f.reset();
   $('eval-student').value=e.studentId;
   Object.keys(e).forEach(k=>{if(f.elements[k]&&k!=='studentId')f.elements[k].value=e[k]??'';});
   $('eval-id').value=e.id;$('eval-editing').classList.remove('hide');$('eval-editing-date').textContent=fdate(e.fecha)+' · '+(state.students.find(s=>s.id===e.studentId)?.nombre||'');
-  $('eval-submit').textContent='Guardar cambios';
-  if(currentView!=='evaluacion')go('evaluacion');calculate();
+  calculate();renderProgress();setTimeout(()=>$('eval-block').scrollIntoView({behavior:'smooth',block:'start'}),350);
 }
 function cancelEvalEdit(silent){
   const f=$('eval-form');const sid=$('eval-student').value;
   if($('eval-id').value){f.reset();$('eval-student').value=sid;$('eval-date').value=today();}
-  $('eval-id').value='';$('eval-editing').classList.add('hide');$('eval-submit').textContent='Guardar evaluación';
+  $('eval-id').value='';$('eval-editing').classList.add('hide');
   if(!silent)calculate();
 }
 function delEval(id){if(!confirm('¿Eliminar esta evaluación?'))return;const sid=state.evals.find(e=>e.id===id)?.studentId;state.evals=state.evals.filter(e=>e.id!==id);if($('eval-id').value===id)cancelEvalEdit(true);persist();renderProgress();if(fichaOpenFor&&fichaOpenFor===sid)openFicha(sid);toast('Evaluación eliminada');}
-$('eval-form').addEventListener('submit',e=>{
-  e.preventDefault();if(!$('eval-student').value){toast('Primero selecciona un alumno');return;}
-  const d=Object.fromEntries(new FormData(e.target).entries());if(!(num(d.peso)>0&&num(d.altura)>0)){toast('Revisa peso y estatura');return;}
+function evalHasData(){const f=$('eval-form');return num(f.elements.peso.value)>0||!!$('eval-id').value;}
+function saveEvalFor(sid){
+  const f=$('eval-form');$('eval-student').value=sid;
+  const d=Object.fromEntries(new FormData(f).entries());if(!(num(d.peso)>0&&num(d.altura)>0)){toast('Evaluación: completa peso y estatura (o déjalos vacíos)');return 'error';}
   if(!d.id){const same=state.evals.find(x=>x.studentId===$('eval-student').value&&x.fecha===d.fecha);
     if(same&&confirm(`Este alumno ya tiene una evaluación el ${fdate(d.fecha)} (${same.peso} kg).\n\nAceptar = actualizar esa evaluación\nCancelar = crear una nueva igual`))d.id=same.id;}
   const editing=d.id&&state.evals.some(x=>x.id===d.id);
-  d.studentId=$('eval-student').value;
+  d.studentId=sid;
   if(editing){const i=state.evals.findIndex(x=>x.id===d.id);state.evals[i]={...state.evals[i],...d};}else{d.id=uid();state.evals.push(d);}
-  persist();cancelEvalEdit(true);renderProgress();
-  if(editing){toast('✅ Evaluación actualizada');if(fichaOpenFor===d.studentId)openFicha(d.studentId);else{$('eval-student').value=d.studentId;calculate();}return;}
-  $('report-student').value=d.studentId;$('report-mode').value='evaluacion';drawReport();$('report-eval').value=d.id;renderReport();
-  toast('Evaluación guardada. Ya puedes generar el PDF.');go('informe');
-});
+  return editing?'updated':'saved';
+}
+$('eval-form').addEventListener('submit',e=>{e.preventDefault();$('student-form').requestSubmit();});
 function evalToPlan(){const sid=$('eval-student').value;if(!sid){toast('Selecciona un alumno');return;}
   $('plan-student').value=sid;loadPlan();const w=num($('peso').value)||num(lastEval(sid)?.peso);if(w>0){$('m-pact').value=w;if(!num($('m-peso').value))$('m-peso').value=w;updateCalc();}go('plan');}
 
