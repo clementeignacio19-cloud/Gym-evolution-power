@@ -3412,7 +3412,7 @@ function setStudentOptions(id,ph='Selecciona un alumno'){
 const evalsOf=sid=>state.evals.filter(e=>e.studentId===sid).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
 const lastEval=sid=>{const l=evalsOf(sid);return l[l.length-1];};
 
-function render(){
+function render(){try{resolveOldDups();}catch(e){}
   ['eval-student','plan-student','workout-student','report-student'].forEach(id=>setStudentOptions(id));
   $('stat-students').textContent=state.students.length;$('stat-evals').textContent=state.evals.length;
   $('stat-plans').textContent=state.plans.length;$('stat-workouts').textContent=state.workouts.length;
@@ -3757,7 +3757,7 @@ function renderConsentPanel(){
   updateTutorBox();$('consent-preview').textContent=c?.text||consentFor(g.texto,s,g);
   $('consent-status').innerHTML=c?`<span class="tag">✓ Firmado ${new Date(c.at).toLocaleDateString('es-CL')}</span>`:s.consentSent?`<span class="tag gold">📧 Enviado · pendiente</span>`:'<span class="tag red">Pendiente de firma</span>';
   const dates=`<div class="small-note" style="margin-top:8px">📅 Fecha de registro: <b style="color:#fff">${s.fechaRegistro?fdate(s.fechaRegistro):'se asigna al guardar'}</b> · Fecha de firma: <b style="color:#fff">${c?new Date(c.at).toLocaleDateString('es-CL'):'pendiente'}</b></div>`;
-  $('consent-sig-view').innerHTML=dates+sigPairHTML(c,s,g,gymSigURL())+(c?`<div class="small-note" style="margin-top:6px">Código: <b style="color:#e8c25a">${esc(c.code)}</b> · ${c.method==='remoto'?'firma remota':'firma presencial'} <button class="btn sm danger" type="button" style="margin-left:6px" onclick="clearConsent()">Anular firma</button></div>`:'');
+  $('consent-sig-view').innerHTML=dates+sigPairHTML(c,s,g,gymSigURL())+(c?`<div class="small-note" style="margin-top:6px">Código: <b style="color:#e8c25a">${esc(c.code)}</b> · ${c.method==='remoto'?'firma remota':'firma presencial'}${(c.edits||[]).length?` · RUT corregido el ${new Date(c.edits[c.edits.length-1].at).toLocaleDateString('es-CL')}`:''}</div><div class="actions" style="margin-top:8px"><button class="btn sm secondary" type="button" onclick="fixConsentRut($('student-form').elements.id.value)">Corregir RUT</button><button class="btn sm danger" type="button" onclick="clearConsent()">Eliminar firma</button></div>`:'');
   if(false)$('consent-sig-view').innerHTML=c?`<div class="verify" style="margin-top:6px"><img class="sig-img" style="width:180px;height:auto" src="${sigToPNG(c.sig,450,158)}" alt="Firma"><div class="small-note">Firmado por <b style="color:#fff">${esc(c.name)}</b>${c.rut?' · '+esc(c.rut):''}<br>${new Date(c.at).toLocaleString('es-CL')} · ${c.method==='remoto'?'firma remota':'firma presencial'}<br>Código: <b style="color:#e8c25a">${esc(c.code)}</b> <button class="btn sm danger" type="button" style="margin-left:6px" onclick="clearConsent()">Anular firma</button></div></div>`:'';
 }
 $('student-form').elements.edad.addEventListener('input',updateTutorBox);
@@ -3840,7 +3840,7 @@ async function confirmLocalSign(sid){
   const at=new Date().toISOString(),text=minor?consentFor(g.texto,{...s,tutorNombre:name,tutorRut:rut||s.tutorRut},g,new Date(at).toLocaleDateString('es-CL')):consentFor(g.texto,{...s,rut:rut||s.rut},g,new Date(at).toLocaleDateString('es-CL'));
   const sig=window._pad.strokes.map(st=>st.slice());
   const code=await signCode({text,name,rut,at,sig});
-  const r=registerSignature(sid,{name,rut,at,sig,code,text,method:'presencial',tutor:minor},'presencial');persist();renderConsentPanel();closeModal();toast(r==='dup'?'⚠️ Ya tenía una firma: elige cuál conservar en Notificaciones':'✅ Consentimiento firmado');
+  const r=registerSignature(sid,{name,rut,at,sig,code,text,method:'presencial',tutor:minor},'presencial');persist();renderConsentPanel();closeModal();toast(r==='actualizada'?'✅ Firma actualizada: se reemplazó la anterior':r==='dup'?'⚠️ Ya tenía una firma: elige cuál conservar en Notificaciones':'✅ Consentimiento firmado');
 }
 function storeConsent(sid,c){
   const i=state.students.findIndex(x=>x.id===sid);if(i<0)return false;
@@ -3907,8 +3907,12 @@ function registerSignature(sid,c,origin){
   if(s.consent&&s.consent.code===c.code)return 'igual';
   if((state.notifs||[]).some(n=>n.type==='dup'&&n.c?.code===c.code))return 'igual';
   if(s.consent){
-    addNotif({type:'dup',sid,title:`${c.name} firmó dos veces`,text:`Ya tenía un consentimiento firmado el ${new Date(s.consent.at).toLocaleString('es-CL')} (código ${s.consent.code}). Llegó otra firma el ${new Date(c.at).toLocaleString('es-CL')} (código ${c.code}) ${origin==='remoto'?'desde su celular':'en forma presencial'}. Elige cuál conservar.`,c});
-    return 'dup';
+    const old=s.consent;
+    if(String(c.at||'')<=String(old.at||''))return 'igual'; // llegó una firma más antigua: se queda la actual
+    state.students[i].consent=c;state.students[i].consentHistory=[{...old,replacedAt:new Date().toISOString()},...(s.consentHistory||[])].slice(0,5);
+    if(c.tutor){if(c.rut)state.students[i].tutorRut=c.rut;}else if(c.rut)state.students[i].rut=c.rut;
+    addNotif({type:origin==='remoto'?'firma':'presencial',sid,title:`${c.name} volvió a firmar`,text:`Se conservó la firma más reciente (${new Date(c.at).toLocaleString('es-CL')}, código ${c.code}). La anterior del ${new Date(old.at).toLocaleString('es-CL')} quedó reemplazada.`});
+    return 'actualizada';
   }
   state.students[i].consent=c;if(c.rut&&!s.rut&&!c.tutor)state.students[i].rut=c.rut;if(c.tutor){if(c.name&&!s.tutorNombre)state.students[i].tutorNombre=c.name;if(c.rut&&!s.tutorRut)state.students[i].tutorRut=c.rut;}
   addNotif({type:origin==='remoto'?'firma':'presencial',sid,title:`${c.name} firmó el consentimiento`,text:`${origin==='remoto'?'Firma remota (link/QR)':'Firma presencial'} · ${new Date(c.at).toLocaleString('es-CL')} · Código ${c.code}`});
@@ -3933,7 +3937,7 @@ function renderFirmas(){
     if(c)return `<div class="cf-card ok"><div class="cf-top"><div><b>${esc(c.name)}</b><div class="small-note">RUT ${esc(c.rut||s.rut||'—')}</div></div><span class="tag">✓ Firmado</span></div>
       <div class="cf-sigs"><div><img src="${sigToPNG(c.sig,420,147)}" alt="Firma alumno"><small>Alumno</small></div><div>${gsig?`<img src="${gsig}" alt="Firma gimnasio">`:'<span style="color:#bbb;font-size:11px">Sin firma</span>'}<small>${esc(g.responsable||'Gimnasio')}</small></div></div>
       <div class="cf-meta">📅 ${new Date(c.at).toLocaleString('es-CL')} · ${c.method==='remoto'?'📱 Remota':'✍️ Presencial'}<br>Registro: ${s.fechaRegistro?fdate(s.fechaRegistro):'—'} · Código <b>${esc(c.code)}</b></div>
-      <div class="actions"><button class="btn sm secondary" type="button" onclick="viewConsent('${id}')">Ver</button><button class="btn sm primary" type="button" onclick="downloadPDF('${id}','consentimiento',null,this)">PDF</button></div></div>`;
+      <div class="actions"><button class="btn sm secondary" type="button" onclick="viewConsent('${id}')">Ver</button><button class="btn sm primary" type="button" onclick="downloadPDF('${id}','consentimiento',null,this)">PDF</button><button class="btn sm secondary" type="button" onclick="fixConsentRut('${id}')">Corregir RUT</button><button class="btn sm danger" type="button" onclick="deleteConsent('${id}')">Eliminar firma</button></div></div>`;
     return `<div class="cf-card"><div class="cf-top"><div><b>${esc(s.nombre)}</b><div class="small-note">RUT ${esc(s.rut||'—')}${s.correo?' · '+esc(s.correo):''}</div></div>${s.consentSent?'<span class="tag gold">📧 Enviado</span>':'<span class="tag red">Pendiente</span>'}</div>
       <div class="cf-meta">${s.consentSent?'Link enviado el '+new Date(s.consentSent).toLocaleString('es-CL'):'Aún no se ha enviado el consentimiento.'}</div>
       <div class="sign-actions"><button class="btn sm green" type="button" onclick="openSignModal('${id}')">Firmar aquí</button><div class="send-grid"><button class="btn sm secondary" type="button" onclick="consentAction('wa',this,'${id}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4A8 8 0 1 1 8.5 19z"/><path d="M9.5 9.5c0 2.5 2.5 5 5 5l1-1.5-2-1-1 1c-1-.4-1.6-1-2-2l1-1-1-2z"/></svg>WhatsApp</button><button class="btn sm secondary" type="button" onclick="consentAction('mail',this,'${id}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>Correo</button><button class="btn sm secondary" type="button" onclick="consentAction('qr',this,'${id}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg>QR</button><button class="btn sm secondary" type="button" onclick="consentAction('link',this,'${id}')"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>Copiar link</button></div></div></div>`;
@@ -3958,7 +3962,40 @@ async function downloadAllConsents(btn){
     window.scrollTo(sx,sy);toast('✅ PDF con '+ok.length+' consentimiento(s) descargado');
   }catch(e){console.error(e);toast('⚠ Error al generar el PDF');}finally{btn.disabled=false;btn.innerHTML=label;}
 }
-function clearConsent(){const id=$('student-form').elements.id.value;if(!id||!confirm('¿Anular la firma de este consentimiento? Tendrá que firmarse de nuevo.'))return;const s=state.students.find(x=>x.id===id);delete s.consent;persist();renderConsentPanel();toast('Firma anulada');}
+function rutClean(r){return String(r||'').toUpperCase().replace(/[^0-9K]/g,'');}
+function rutValid(r){const c=rutClean(r);if(c.length<2)return false;const b=c.slice(0,-1),dv=c.slice(-1);let s=0,m=2;for(let i=b.length-1;i>=0;i--){s+=+b[i]*m;m=m===7?2:m+1;}const r2=11-(s%11);return dv===(r2===11?'0':r2===10?'K':String(r2));}
+function rutFormat(r){const c=rutClean(r);if(c.length<2)return String(r||'').trim();const b=c.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.');return b+'-'+c.slice(-1);}
+function fixConsentRut(sid){
+  const s=state.students.find(x=>x.id===sid);const c=s?.consent;if(!c)return;
+  const who=c.tutor?'del tutor ('+c.name+')':'de '+c.name;
+  let nv=prompt(`Corregir RUT ${who}\n\nRUT actual en la firma: ${c.rut||'(vacío)'}`,c.rut||'');if(nv===null)return;nv=nv.trim();
+  if(!nv){toast('Escribe un RUT');return;}
+  if(!rutValid(nv)&&!confirm(`El RUT ${nv} no parece válido (el dígito verificador no calza).\n\n¿Guardarlo igual?`))return;
+  nv=rutValid(nv)?rutFormat(nv):nv;const prev=c.rut||'';if(prev===nv){toast('Es el mismo RUT');return;}
+  if(c.text){c.text=prev?c.text.split(prev).join(nv):c.text.replace(/RUT ________/,'RUT '+nv);}
+  c.rut=nv;c.edits=[...(c.edits||[]),{at:new Date().toISOString(),campo:'RUT',de:prev,a:nv}];
+  if(c.tutor)s.tutorRut=nv;else s.rut=nv;
+  persist();afterConsentChange(sid);toast('✅ RUT corregido en la firma y en la ficha');
+}
+function deleteConsent(sid){
+  const s=state.students.find(x=>x.id===sid);if(!s?.consent)return;
+  if(!confirm(`¿Eliminar la firma de ${s.nombre}?\n\nEl consentimiento quedará pendiente y tendrá que firmarse de nuevo.`))return;
+  s.consentHistory=[{...s.consent,deletedAt:new Date().toISOString()},...(s.consentHistory||[])].slice(0,5);
+  delete s.consent;delete s.consentSent;persist();afterConsentChange(sid);toast('Firma eliminada. Ya puedes enviar o firmar de nuevo.');
+}
+function afterConsentChange(sid){
+  if($('student-form')?.elements.id.value===sid){const s=state.students.find(x=>x.id===sid);const f=$('student-form');if(f.elements.rut&&s)f.elements.rut.value=s.rut||'';if(f.elements.tutorRut&&s)f.elements.tutorRut.value=s.tutorRut||'';renderConsentPanel();}
+  if(currentView==='firmas')renderFirmas();
+  if(!$('modal').classList.contains('hide')&&$('modal-box').querySelector('.report-wrap'))viewConsent(sid);
+}
+function resolveOldDups(){
+  let ch=false;(state.notifs||[]).forEach(n=>{if(n.type!=='dup'||n.resolved||!n.c)return;const s=state.students.find(x=>x.id===n.sid);if(!s)return;
+    if(!s.consent||String(n.c.at||'')>String(s.consent.at||'')){if(s.consent)s.consentHistory=[{...s.consent,replacedAt:new Date().toISOString()},...(s.consentHistory||[])].slice(0,5);s.consent=n.c;}
+    n.resolved='Se conservó la firma más reciente';n.read=true;ch=true;});
+  if(ch)persist();
+}
+function clearConsent(){const id=$('student-form').elements.id.value;if(id)return deleteConsent(id);}
+function clearConsentOld(){const id=$('student-form').elements.id.value;if(!id||!confirm('¿Anular la firma de este consentimiento? Tendrá que firmarse de nuevo.'))return;const s=state.students.find(x=>x.id===id);delete s.consent;persist();renderConsentPanel();toast('Firma anulada');}
 
 /* --- página pública de firma (#firmar=) y retorno (#firma=) --- */
 async function handleHash(){
@@ -4145,7 +4182,7 @@ function consentBody(s,g,c,gsig){
       <div class="report-box" style="white-space:normal;background:#fff;border:1px solid #ddd;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end">${c?`<img src="${sigToPNG(c.sig)}" style="width:100%;max-width:300px;max-height:95px;object-fit:contain;display:block;margin:0 auto">`:''}<div style="border-top:1px solid #333;margin-top:4px;padding-top:4px">${(()=>{const tu=c?c.tutor:isMinor(s);return `<b style="margin:0">${esc(c?.name||(tu?s.tutorNombre:s.nombre)||'')}</b>RUT ${esc(c?.rut||(tu?s.tutorRut:s.rut)||'____________')}<br><span style="color:#666">${tu?'Firma del tutor legal, en representación de '+esc(s.nombre):'Firma del alumno'}</span>`;})()}</div></div>
       <div class="report-box" style="white-space:normal;background:#fff;border:1px solid #ddd;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end">${gsig?`<img src="${gsig}" style="width:100%;max-width:300px;max-height:95px;object-fit:contain;display:block;margin:0 auto">`:''}<div style="border-top:1px solid #333;margin-top:4px;padding-top:4px"><b style="margin:0">${esc(g.responsable||g.nombre)}</b>${esc(g.nombre)}${g.rut?' · '+esc(g.rut):''}<br><span style="color:#666">Firma del gimnasio</span></div></div>
     </div>
-    ${c?`<div class="report-box" style="white-space:normal;display:flex;gap:12px;align-items:center;margin-top:4px"><img src="${qrDataURL(verifyText(c,g),3)}" style="width:100px;height:100px;image-rendering:pixelated;flex:none"><div><b>Firma electrónica simple · verificación</b>${c.method==='remoto'?'Firmado a distancia (link/QR)':'Firmado en forma presencial'} el ${new Date(c.at).toLocaleString('es-CL')}<br>Código: <b style="display:inline">${esc(c.code)}</b></div></div>`:''}`;
+    ${c?`<div class="report-box" style="white-space:normal;display:flex;gap:12px;align-items:center;margin-top:4px"><img src="${qrDataURL(verifyText(c,g),3)}" style="width:100px;height:100px;image-rendering:pixelated;flex:none"><div><b>Firma electrónica simple · verificación</b>${c.method==='remoto'?'Firmado a distancia (link/QR)':'Firmado en forma presencial'} el ${new Date(c.at).toLocaleString('es-CL')}<br>Código: <b style="display:inline">${esc(c.code)}</b>${(c.edits||[]).length?`<br>RUT corregido por el gimnasio el ${new Date(c.edits[c.edits.length-1].at).toLocaleDateString('es-CL')} (antes: ${esc(c.edits[0].de||'vacío')})`:''}</div></div>`:''}`;
 }
 async function consentPDF(c,s,g,btn){
   const label=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Generando…';
